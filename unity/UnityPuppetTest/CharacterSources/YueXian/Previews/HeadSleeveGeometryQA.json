@@ -1,0 +1,90 @@
+{
+  "closed_meshes": {
+    "Head_Closed_Skull": {
+      "boundary_edges": 0,
+      "non_manifold_edges": 0
+    },
+    "Hair_Closed_HalfUp_Shell": {
+      "boundary_edges": 0,
+      "non_manifold_edges": 0
+    },
+    "Left_Closed_Carved_Hand": {
+      "boundary_edges": 0,
+      "non_manifold_edges": 0
+    },
+    "Right_Closed_Carved_Hand": {
+      "boundary_edges": 0,
+      "non_manifold_edges": 0
+    }
+  },
+  "poses": [
+    {
+      "right_hand_degrees": -4.5,
+      "sleeve_instrument_surface_intersections": {
+        "Yueqin_Bridge": 0,
+        "Yueqin_Circular_Binding": 0,
+        "Yueqin_Fingerboard": 0,
+        "Yueqin_Four_Strings": 0,
+        "Yueqin_Four_Tuning_Pegs": 0,
+        "Yueqin_HalfMoon_Inlay": 0,
+        "Yueqin_PegHead": 0,
+        "Yueqin_Raised_Frets": 0,
+        "Yueqin_Round_Rosewood_Frame": 0,
+        "Yueqin_Round_Soundboard": 0,
+        "Yueqin_Short_Neck": 0,
+        "Yueqin_Short_Tassel": 0,
+        "Yueqin_Soundboard_Grain": 0,
+        "Yueqin_Tailpiece": 0,
+        "Yueqin_Tassel_JadeBead": 0
+      },
+      "sleeve_finger_surface_intersections": 0,
+      "covered_forearm_join_intersections": 356
+    },
+    {
+      "right_hand_degrees": 0,
+      "sleeve_instrument_surface_intersections": {
+        "Yueqin_Bridge": 0,
+        "Yueqin_Circular_Binding": 0,
+        "Yueqin_Fingerboard": 0,
+        "Yueqin_Four_Strings": 0,
+        "Yueqin_Four_Tuning_Pegs": 0,
+        "Yueqin_HalfMoon_Inlay": 0,
+        "Yueqin_PegHead": 0,
+        "Yueqin_Raised_Frets": 0,
+        "Yueqin_Round_Rosewood_Frame": 0,
+        "Yueqin_Round_Soundboard": 0,
+        "Yueqin_Short_Neck": 0,
+        "Yueqin_Short_Tassel": 0,
+        "Yueqin_Soundboard_Grain": 0,
+        "Yueqin_Tailpiece": 0,
+        "Yueqin_Tassel_JadeBead": 0
+      },
+      "sleeve_finger_surface_intersections": 0,
+      "covered_forearm_join_intersections": 356
+    },
+    {
+      "right_hand_degrees": 4.5,
+      "sleeve_instrument_surface_intersections": {
+        "Yueqin_Bridge": 0,
+        "Yueqin_Circular_Binding": 0,
+        "Yueqin_Fingerboard": 0,
+        "Yueqin_Four_Strings": 0,
+        "Yueqin_Four_Tuning_Pegs": 0,
+        "Yueqin_HalfMoon_Inlay": 0,
+        "Yueqin_PegHead": 0,
+        "Yueqin_Raised_Frets": 0,
+        "Yueqin_Round_Rosewood_Frame": 0,
+        "Yueqin_Round_Soundboard": 0,
+        "Yueqin_Short_Neck": 0,
+        "Yueqin_Short_Tassel": 0,
+        "Yueqin_Soundboard_Grain": 0,
+        "Yueqin_Tailpiece": 0,
+        "Yueqin_Tassel_JadeBead": 0
+      },
+      "sleeve_finger_surface_intersections": 0,
+      "covered_forearm_join_intersections": 356
+    }
+  ],
+  "missing_meshes": [],
+  "passed": true
+}

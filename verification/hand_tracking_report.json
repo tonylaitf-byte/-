@@ -1,0 +1,9 @@
+{
+  "success": true,
+  "version": 2,
+  "handDetected": true,
+  "calibrated": true,
+  "calibrationProgress": 1.0,
+  "sequenceId": 50,
+  "missingUnityKeys": []
+}

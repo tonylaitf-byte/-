@@ -1,0 +1,14 @@
+{
+  "name": "palm-theatre-validation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browser validation for the integrated Unity puppet stage",
+  "scripts": {
+    "test:browser": "node tests/browser_validation.cjs",
+    "test:camera": "node tests/camera_latency_validation.cjs",
+    "benchmark": "node tests/performance_benchmark.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

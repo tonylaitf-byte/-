@@ -1,0 +1,46 @@
+{
+  "success": true,
+  "model": "C:\\Users\\Detion0\\Documents\\Codex\\2026-07-08\\new-chat\\PuppetTeamDocker\\unity\\UnityPuppetTest\\Assets\\Models\\SwordCharacter\\sword_01.fbx",
+  "requireRig": true,
+  "objectCount": 3,
+  "meshCount": 2,
+  "armatureCount": 1,
+  "boneCount": 24,
+  "vertexCount": 88883,
+  "polygonCount": 178134,
+  "materialCount": 0,
+  "actionCount": 1,
+  "armatures": [
+    "Armature"
+  ],
+  "bones": [
+    "Head",
+    "Hips",
+    "LeftArm",
+    "LeftFoot",
+    "LeftForeArm",
+    "LeftHand",
+    "LeftLeg",
+    "LeftShoulder",
+    "LeftToeBase",
+    "LeftUpLeg",
+    "RightArm",
+    "RightFoot",
+    "RightForeArm",
+    "RightHand",
+    "RightLeg",
+    "RightShoulder",
+    "RightToeBase",
+    "RightUpLeg",
+    "Spine",
+    "Spine01",
+    "Spine02",
+    "head_end",
+    "headfront",
+    "neck"
+  ],
+  "materials": [],
+  "actions": [
+    "Armature|Armature|Armature|Armature|walking_man|baselayer"
+  ]
+}

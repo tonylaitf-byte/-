@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.matplotlib/
+.venv/
+test_*.py
+README.md

@@ -1,0 +1,34 @@
+[
+  {
+    "players": 1,
+    "seconds": 15.013399999991059,
+    "renderFps": 74.2003809930238,
+    "cameraCallbackFps": 19.982149279988455,
+    "p95FrameMs": 16.799999999999272,
+    "pixelRatio": 1.5,
+    "canvas": [
+      1543,
+      868
+    ],
+    "preview": "IMG",
+    "inferenceFps": 0.9325002997327946,
+    "frameRequestMedianMs": 46,
+    "frameRequestP95Ms": 53
+  },
+  {
+    "players": 2,
+    "seconds": 15.01790000000596,
+    "renderFps": 53.00341592364339,
+    "cameraCallbackFps": 19.97616178026761,
+    "p95FrameMs": 25.099999999998545,
+    "pixelRatio": 1.5,
+    "canvas": [
+      1543,
+      868
+    ],
+    "preview": "IMG",
+    "inferenceFps": 0.8656336771449298,
+    "frameRequestMedianMs": 43,
+    "frameRequestP95Ms": 59
+  }
+]

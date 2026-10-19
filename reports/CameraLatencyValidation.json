@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "addedResponseDelayMs": 350,
+  "previewFps": 19.955598792656605,
+  "inferenceFps": 2.245004864173868,
+  "maxFramesInFlight": 1,
+  "mjpegRequests": 0,
+  "overlay": true,
+  "staleFramesAfterStop": false
+}

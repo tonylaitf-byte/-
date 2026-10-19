@@ -1,0 +1,14 @@
+name: unity-puppet
+
+services:
+  hand-tracking:
+    build:
+      context: ./hand-tracking
+    image: unity-puppet-hand-tracking:1.0
+    container_name: unity-puppet-hand-tracking
+    ports:
+      - "127.0.0.1:5000:5000"
+    environment:
+      HAND_MODEL_COMPLEXITY: "1"
+      BROWSER_FRAME_TIMEOUT: "0.8"
+    restart: unless-stopped

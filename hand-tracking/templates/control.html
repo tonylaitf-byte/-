@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>掌中智戲 · 演出舞台</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/static/theatre-ui/theatre.css"></head>
+<body class="performance-page">
+  <header class="site-header"><a class="brand" href="/" id="back">掌中<span>智戲</span><small>PALM THEATRE</small></a><div class="performance-heading"><span id="performance-title">演出舞台</span><span class="pill" id="mode-label">載入中</span></div><a class="back-link" href="/" id="back-link">← 返回設定</a></header>
+  <main class="performance-main">
+    <div class="performance-grid">
+      <section class="stage-panel" aria-label="Unity 演出舞台">
+        <div class="stage-caption"><span><i class="live-dot"></i> 月夜戲台</span><span id="stage-status" role="status">正在準備舞台</span></div>
+        <div class="canvas-wrap" id="stage-wrap">
+          <canvas id="unity-canvas" width="1280" height="720" tabindex="0" aria-label="Unity 立體戲偶舞台"></canvas>
+          <div class="stage-loading" id="loading"><div class="loading-moon" aria-hidden="true">☾</div><strong id="loading-label">正在準備演出…</strong><progress id="load-progress" max="1" value="0"></progress><span id="load-detail">首次載入需要一點時間</span><button id="retry" hidden>重新載入舞台</button></div>
+        </div>
+        <div class="subtitle-area" aria-live="polite"><span class="subtitle-label">台詞</span><p id="subtitle">舞台準備中</p></div>
+        <div class="stage-controls"><div class="control-buttons"><button id="pause" disabled>暫停演出</button><button id="reset" disabled>重新開始</button><button id="instrument" hidden disabled>顯示／收起月琴</button></div><label class="volume">音量 <input id="volume" type="range" min="0" max="1" step="0.05" value="0.8" aria-label="演出音量"></label><button id="fullscreen">全螢幕舞台</button></div>
+        <div class="stage-footnote" id="stage-hint">正在套用演出設定</div>
+      </section>
+      <aside class="recognition-panel" aria-label="攝影機與辨識區">
+        <div class="panel-heading"><h2>手部辨識</h2><span class="small-label" id="camera-status" role="status">鏡頭未開啟</span></div>
+        <div class="camera-preview"><video id="preview" autoplay muted playsinline aria-label="即時攝影機畫面"></video><canvas id="hand-overlay" width="640" height="480" aria-label="手部辨識骨架"></canvas><div class="camera-empty" id="camera-empty"><span aria-hidden="true">◎</span><p id="camera-message">舞台載入後啟動攝影機</p></div><div class="zone-labels" id="zone-labels" hidden><span>左 · 俠客</span><span>右 · 琴師</span></div></div>
+        <p class="camera-metrics" id="camera-metrics">鏡頭未開啟</p>
+        <button id="camera-button" class="camera-button" disabled>開啟鏡頭</button>
+        <p class="feedback" id="feedback" role="status">正在連接辨識服務…</p>
+        <div id="role-states" class="role-states"></div>
+        <section class="help-section"><h3 id="help-title">操作提示</h3><div id="instructions"></div></section>
+      </aside>
+    </div>
+  </main>
+  <script src="/static/theatre-ui/performance.js"></script>
+</body></html>

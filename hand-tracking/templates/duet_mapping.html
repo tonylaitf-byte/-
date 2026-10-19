@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>月下琴劍 · 雙人手部映射</title>
+  <style>
+    :root{color-scheme:dark;font-family:"Microsoft JhengHei",sans-serif;color:#edf3f4;background:#0b141c}
+    *{box-sizing:border-box}body{margin:0}main{max-width:1380px;margin:auto;padding:22px}
+    header,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    h1{font-size:26px;margin:8px 0}h2{font-size:21px;margin:0 0 12px}a{color:#92d6df;text-decoration:none}
+    p{line-height:1.7;color:#b8cad1}button{font:inherit;color:white;background:#255768;border:1px solid #75bbcb;border-radius:8px;padding:10px 16px;cursor:pointer}button:disabled{opacity:.5}
+    .layout{display:grid;grid-template-columns:245px minmax(0,1fr) 245px;gap:16px;margin-top:18px}
+    .panel,.preview,.rules{border:1px solid #304753;background:#12232d;border-radius:12px;overflow:hidden}.panel{padding:17px}.warrior{border-top:4px solid #d8bd7c}.musician{border-top:4px solid #90cadc}
+    .preview{position:relative;aspect-ratio:4/3;align-self:start;background:#040a10}.preview img{width:100%;height:100%;object-fit:contain;display:block}.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:22px;color:#b8cad1}.empty[hidden]{display:none}
+    .metric{margin:17px 0;color:#b8cad1}.metric strong{display:block;color:#edf3f4;margin-top:6px;font-size:18px;font-variant-numeric:tabular-nums}.bar{height:8px;background:#304753;border-radius:8px;overflow:hidden;margin-top:8px}.bar div{height:100%;background:#91cedf;width:0}
+    .rules{padding:14px 20px;margin-top:16px}.ok{color:#9bdbb6}.warn{color:#e4c77c}video,canvas{display:none}
+    @media(max-width:1050px){.layout{grid-template-columns:1fr 1fr}.preview{grid-row:1;grid-column:1/3}}@media(max-width:600px){main{padding:12px}.panel{padding:12px}h1{font-size:22px}}
+  </style>
+</head>
+<body><main>
+  <header><div><a href="/">← 返回模式選擇</a><h1>月下琴劍 · 雙人手部映射</h1></div><div class="toolbar"><button id="calibrateBoth">兩人重新校正</button><button id="cameraButton">開啟鏡頭</button></div></header>
+  <p id="status" class="warn">正在啟動攝影機…</p>
+  <div class="layout">
+    <section class="panel warrior"><h2>左側 · 俠客</h2><div id="leftOwner">等待左區的手</div>
+      <div class="metric">自然姿勢校正<strong id="leftCalibration">等待手部</strong><div class="bar"><div id="leftProgress"></div></div></div>
+      <div class="metric">頭部 · 俯仰／左右<strong id="leftHead">0.00 / 0.00</strong></div>
+      <div class="metric">雙臂 · 左／右<strong id="leftArms">0.00 / 0.00</strong></div>
+      <div class="metric">水平平移<strong id="leftMovement">0.00</strong></div>
+      <button data-calibrate="left">只校正俠客</button>
+    </section>
+    <section class="preview"><img id="preview" alt="左俠客、右琴師的雙人手部映射預覽"><div id="empty" class="empty">攝影機啟動中…</div></section>
+    <section class="panel musician"><h2>右側 · 月弦公子</h2><div id="rightOwner">等待右區的手</div>
+      <div class="metric">自然姿勢校正<strong id="rightCalibration">等待手部</strong><div class="bar"><div id="rightProgress"></div></div></div>
+      <div class="metric">頭部 · 俯仰／左右<strong id="rightHead">0.00 / 0.00</strong></div>
+      <div class="metric">雙臂 · 左／右<strong id="rightArms">0.00 / 0.00</strong></div>
+      <div class="metric">水平平移<strong id="rightMovement">0.00</strong></div>
+      <button data-calibrate="right">只校正琴師</button>
+    </section>
+  </div>
+  <div class="rules"><p>一隻手操控一個人偶：預覽左區控制俠客、右區控制琴師，兩區皆接受左手或右手。手掌保持自然姿勢約 1.5 秒，各自完成校正後即可操控。</p>
+  <p>拇指控制人偶左臂，小指控制右臂，中指控制頭部；移動或轉動手掌，帶動人偶平移、轉身與身體傾斜。中央 45%～55% 為緩衝區，兩個人偶各自限制在舞台半邊。</p>
+  <p>控制權建立後，手移過中央不會換角。短暫遮擋保留姿勢，失去追蹤超過 1 秒後回到中立；新加入的手會重新校正。Unity 可用 I 顯示／隱藏月琴，Space 暫停／繼續映射。請關閉其他正在辨識的網頁。</p></div>
+  <video id="camera" autoplay muted playsinline></video><canvas id="canvas" width="640" height="480"></canvas>
+</main><script>
+  const video=document.querySelector('#camera'),canvas=document.querySelector('#canvas'),context=canvas.getContext('2d',{alpha:false});
+  const button=document.querySelector('#cameraButton'),preview=document.querySelector('#preview'),empty=document.querySelector('#empty'),status=document.querySelector('#status');
+  let stream=null,sending=false,lastCapture=0,modeRequest=null;
+  function setStatus(message,ok){status.textContent=message;status.className=ok?'ok':'warn';}
+  async function ensureMode(){
+    if(!modeRequest)modeRequest=fetch('/control_mode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'duet_mapping'})})
+      .then(r=>{if(!r.ok)throw new Error('雙人映射服務尚未就緒');}).finally(()=>modeRequest=null);
+    return modeRequest;
+  }
+  async function startCamera(){
+    if(stream||button.disabled)return;button.disabled=true;
+    try{
+      await ensureMode();stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},frameRate:{ideal:30}},audio:false});
+      video.srcObject=stream;await video.play();canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;
+      preview.src='/video_feed?duetMapping='+Date.now();empty.hidden=true;button.textContent='停止鏡頭';setStatus('雙人映射中 · 左俠客／右琴師 · 請各自保持自然姿勢完成校正',true);requestAnimationFrame(capture);
+    }catch(error){if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;empty.hidden=false;
+      empty.textContent=error.name==='NotAllowedError'?'請允許攝影機存取，再按「開啟鏡頭」重試。':error.message;setStatus('無法開啟攝影機',false);
+    }finally{button.disabled=false;}
+  }
+  function stopCamera(){if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;preview.removeAttribute('src');empty.hidden=false;empty.textContent='按「開啟鏡頭」重新開始';button.textContent='開啟鏡頭';setStatus('攝影機已停止',false);}
+  async function sendFrame(blob){try{const response=await fetch('/frame',{method:'POST',headers:{'Content-Type':'image/jpeg'},body:blob,cache:'no-store'});if(!response.ok)throw new Error('frame failed');}catch(_){setStatus('辨識服務未連線',false);}finally{sending=false;}}
+  function capture(timestamp){if(!stream)return;if(!sending&&timestamp-lastCapture>=33&&video.readyState>=2){sending=true;lastCapture=timestamp;context.drawImage(video,0,0,canvas.width,canvas.height);canvas.toBlob(blob=>blob?sendFrame(blob):sending=false,'image/jpeg',.76);}requestAnimationFrame(capture);}
+  function updateRole(side,state){
+    state=state||{};const controls=state.controls||{},progress=Math.max(0,Math.min(1,Number(controls.calibrationProgress||0))),value=n=>Number(n||0).toFixed(2);
+    document.querySelector('#'+side+'Owner').textContent=state.handDetected?'控制中 · '+(state.handedness==='Left'?'左手':state.handedness==='Right'?'右手':'手部'):state.ownerHeld?'暫失追蹤 · 保留姿勢':'等待區域內的手';
+    document.querySelector('#'+side+'Calibration').textContent=controls.calibrated?'校正完成':state.handDetected?'校正 '+Math.round(progress*100)+'%':'等待手部';
+    document.querySelector('#'+side+'Progress').style.width=Math.round(progress*100)+'%';
+    document.querySelector('#'+side+'Head').textContent=value(controls.headPitch)+' / '+value(controls.headYaw);
+    document.querySelector('#'+side+'Arms').textContent=value(controls.leftHandY)+' / '+value(controls.rightHandY);
+    document.querySelector('#'+side+'Movement').textContent=value(controls.bodyX);
+  }
+  async function refreshState(){try{const response=await fetch('/duet_mapping_state',{cache:'no-store'});if(!response.ok)throw new Error('state failed');const state=await response.json();if(stream&&state.controlMode!=='duet_mapping')await ensureMode();updateRole('left',state.left);updateRole('right',state.right);if(stream)setStatus('雙人映射中 · 左俠客／右琴師 · 各自校正、各自控制',true);}catch(_){setStatus('雙人映射服務未連線',false);}}
+  async function calibrate(side){try{await ensureMode();const response=await fetch('/duet_mapping/calibrate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({side})});if(!response.ok)throw new Error('校正失敗');setStatus('請在各自區域保持自然手勢，重新校正中…',true);}catch(error){setStatus(error.message,false);}}
+  button.addEventListener('click',()=>stream?stopCamera():startCamera());document.querySelector('#calibrateBoth').addEventListener('click',()=>calibrate('both'));
+  document.querySelectorAll('[data-calibrate]').forEach(node=>node.addEventListener('click',()=>calibrate(node.dataset.calibrate)));
+  window.addEventListener('pagehide',stopCamera);setInterval(refreshState,100);refreshState();startCamera();
+</script></body></html>

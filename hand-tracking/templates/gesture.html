@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>戲偶手勢模式</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, "Microsoft JhengHei", sans-serif; color: #f4f6f4; background: #101310; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    main { width: min(1180px, 100%); margin: 0 auto; padding: 18px; }
+    header, .toolbar, .status { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    header { justify-content: space-between; margin-bottom: 14px; }
+    h1 { margin: 6px 0 0; font-size: 22px; }
+    a { color: #78dc9a; text-decoration: none; }
+    button { min-height: 42px; padding: 0 18px; border: 1px solid #54c97a; border-radius: 8px; color: white; background: #1d6d3b; font: inherit; cursor: pointer; }
+    button:disabled { opacity: .5; }
+    .layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(280px, 1fr); gap: 14px; }
+    .stage, .panel { border: 1px solid #364039; border-radius: 10px; background: #181d19; overflow: hidden; }
+    .stage { position: relative; aspect-ratio: 4 / 3; background: #050605; }
+    .stage img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    .empty { position: absolute; inset: 0; display: grid; place-items: center; color: #aeb8b1; }
+    .empty[hidden] { display: none; }
+    .panel { padding: 16px; }
+    .mapping { display: grid; gap: 10px; margin: 18px 0; }
+    .gesture-card { padding: 12px; border: 1px solid #3d4a42; border-radius: 8px; background: #202721; }
+    .gesture-card strong { color: #79e49d; font-size: 18px; }
+    .status { justify-content: space-between; padding: 12px; border-radius: 8px; background: #111511; }
+    .metric { margin-top: 14px; }
+    .metric span { color: #aeb8b1; }
+    .metric strong { display: block; margin-top: 5px; font-size: 24px; }
+    .bar { height: 10px; margin-top: 8px; overflow: hidden; border-radius: 999px; background: #303831; }
+    .bar > div { width: 0; height: 100%; background: #64d98a; transition: width .08s linear; }
+    .ok { color: #65dc8c; } .warn { color: #ffca5c; }
+    video, canvas { display: none; }
+    @media (max-width: 820px) { .layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-mode="gesture">
+  <main>
+    <header>
+      <div><a href="/">← 返回模式選擇</a><h1>手勢模式</h1></div>
+      <div class="toolbar"><button id="cameraButton" type="button">開啟鏡頭</button></div>
+    </header>
+    <div class="layout">
+      <section class="stage" aria-label="手勢辨識預覽">
+        <img id="processedPreview" alt="手勢辨識預覽">
+        <div id="emptyState" class="empty">按「開啟鏡頭」開始辨識</div>
+      </section>
+      <aside class="panel">
+        <div class="status"><strong id="cameraStatus" class="warn">等待攝影機</strong><span>穩定維持 0.5 秒</span></div>
+        <div class="mapping" aria-label="手勢對應">
+          <div class="gesture-card"><strong>1</strong>　僅食指 → 鞠躬</div>
+          <div class="gesture-card"><strong>2</strong>　食指＋中指 → 賞月</div>
+          <div class="gesture-card"><strong>3</strong>　拇指＋食指＋中指 → 喝酒</div>
+          <div class="gesture-card"><strong>4</strong>　拇指明顯收進掌心、其餘四指伸出 → 警惕</div>
+          <div class="gesture-card"><strong>5</strong>　五指全部伸出、攤開手掌 → 舞劍</div>
+        </div>
+        <div class="metric"><span>目前手勢</span><strong id="currentGesture">—</strong></div>
+        <div class="metric"><span>確認進度</span><div class="bar"><div id="holdBar"></div></div></div>
+        <div class="metric"><span>已辨識動作</span><strong id="detectedAction">等待手勢</strong></div>
+        <div class="metric"><span>角色左右位置</span><strong id="movementX">中間　0.00</strong></div>
+        <p id="performanceHelp" style="color:#aeb8b1;line-height:1.6">動作會依辨識順序排隊。動畫與語音完整播放前，不會被下一個手勢打斷。</p>
+      </aside>
+    </div>
+    <video id="camera" autoplay muted playsinline></video>
+    <canvas id="captureCanvas" width="640" height="480"></canvas>
+  </main>
+  <script>
+    const video = document.querySelector("#camera");
+    const canvas = document.querySelector("#captureCanvas");
+    const context = canvas.getContext("2d", { alpha: false });
+    const cameraButton = document.querySelector("#cameraButton");
+    const preview = document.querySelector("#processedPreview");
+    const emptyState = document.querySelector("#emptyState");
+    const cameraStatus = document.querySelector("#cameraStatus");
+    const currentGesture = document.querySelector("#currentGesture");
+    const detectedAction = document.querySelector("#detectedAction");
+    const holdBar = document.querySelector("#holdBar");
+    const movementX = document.querySelector("#movementX");
+    const musician = new URLSearchParams(location.search).get("character") === "musician";
+    const actionNames = musician ? {
+      BOW: "抱琴行禮", LANDSCAPE: "悠然慢奏", DRINK: "停琴回應",
+      ALERT: "急弦挑戰", ATTACK: "急奏助劍"
+    } : {
+      DRINK: "喝酒",
+      ATTACK: "舞劍",
+      BOW: "鞠躬",
+      LANDSCAPE: "賞月",
+      ALERT: "警惕"
+    };
+    if (musician) {
+      document.title = "月弦公子 · 五手勢模式";
+      document.querySelector("h1").textContent = "月弦公子 · 五手勢模式";
+      document.querySelector("#performanceHelp").textContent = "攝影機辨識到穩定手勢即自動觸發。動作與台詞會先完整播放，再依鏡頭當下的手勢啟動下一個動作，不累積待播。手掌左右移動可平移角色。";
+      const names = ["抱琴行禮", "悠然慢奏", "停琴回應", "急弦挑戰", "急奏助劍"];
+      document.querySelectorAll(".gesture-card").forEach((card, i) => {
+        const text = card.lastChild;
+        text.textContent = text.textContent.replace(/→.*/, "→ " + names[i]);
+      });
+    }
+    let stream = null;
+    let sending = false;
+    let lastCapture = 0;
+    let modeRequest = null;
+    async function ensureGestureMode() {
+      if (!modeRequest) {
+        modeRequest = fetch("/control_mode", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "gesture" }) })
+          .then(response => { if (!response.ok) throw new Error("無法切換手勢模式"); })
+          .finally(() => { modeRequest = null; });
+      }
+      return modeRequest;
+    }
+
+    function setStatus(message, ready) {
+      cameraStatus.textContent = message;
+      cameraStatus.className = ready ? "ok" : "warn";
+    }
+    async function startCamera() {
+      if (stream || cameraButton.disabled) return;
+      cameraButton.disabled = true;
+      emptyState.textContent = "攝影機啟動中…";
+      try {
+        await ensureGestureMode();
+        stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30 } }, audio: false });
+        video.srcObject = stream;
+        await video.play();
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        preview.src = "/video_feed?session=" + Date.now();
+        emptyState.hidden = true;
+        cameraButton.textContent = "停止鏡頭";
+        setStatus("手勢辨識中", true);
+        requestAnimationFrame(captureLoop);
+      } catch (error) {
+        if (stream) stream.getTracks().forEach(track => track.stop());
+        stream = null;
+        video.srcObject = null;
+        emptyState.textContent = error.name === "NotAllowedError" ? "請允許攝影機存取，再按「開啟鏡頭」重試。" : error.message || "無法開啟攝影機";
+        emptyState.hidden = false;
+        setStatus("無法開啟攝影機", false);
+      } finally { cameraButton.disabled = false; }
+    }
+    function stopCamera() {
+      if (stream) stream.getTracks().forEach(track => track.stop());
+      stream = null;
+      video.srcObject = null;
+      preview.removeAttribute("src");
+      emptyState.textContent = "按「開啟鏡頭」開始辨識";
+      emptyState.hidden = false;
+      cameraButton.textContent = "開啟鏡頭";
+      setStatus("等待攝影機", false);
+    }
+    async function sendFrame(blob) {
+      try {
+        const response = await fetch("/frame", { method: "POST", headers: { "Content-Type": "image/jpeg" }, body: blob, cache: "no-store" });
+        if (!response.ok) throw new Error("Frame request failed");
+      } catch (_) { setStatus("辨識服務未連線", false); }
+      finally { sending = false; }
+    }
+    function captureLoop(timestamp) {
+      if (!stream) return;
+      if (!sending && timestamp - lastCapture >= 33 && video.readyState >= 2) {
+        lastCapture = timestamp;
+        sending = true;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(blob => blob ? sendFrame(blob) : sending = false, "image/jpeg", 0.76);
+      }
+      requestAnimationFrame(captureLoop);
+    }
+    async function refreshState() {
+      try {
+        const response = await fetch("/puppet_state", { cache: "no-store" });
+        const state = await response.json();
+        if (stream && state.controlMode !== "gesture") await ensureGestureMode();
+        const gesture = Number(state.gesture || 0);
+        currentGesture.textContent = gesture || "—";
+        holdBar.style.width = `${Math.round(Number(state.gestureHold || 0) * 100)}%`;
+        detectedAction.textContent = actionNames[state.detectedAction] || "等待手勢";
+        const movement = Number(state.gestureMoveX || 0);
+        const direction = movement < -0.08 ? "左" : movement > 0.08 ? "右" : "中間";
+        movementX.textContent = `${direction}　${movement.toFixed(2)}`;
+      } catch (_) { setStatus("辨識服務未連線", false); }
+    }
+    cameraButton.addEventListener("click", () => stream ? stopCamera() : startCamera());
+    window.addEventListener("pagehide", stopCamera);
+    setInterval(refreshState, 100);
+    refreshState();
+    if (musician) startCamera();
+    else ensureGestureMode().catch(() => setStatus("辨識服務未連線", false));
+  </script>
+</body>
+</html>

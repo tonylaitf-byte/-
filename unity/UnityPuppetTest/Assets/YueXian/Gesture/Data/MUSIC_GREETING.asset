@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94a9bdd01f95a1a46a28392bb3dc6413, type: 3}
+  m_Name: MUSIC_GREETING(Clone)
+  m_EditorClassIdentifier: Assembly-CSharp::PalmTheatre.MusicianActions.MusicianActionDefinition
+  actionId: MUSIC_GREETING
+  displayName: "\u62B1\u7434\u884C\u79AE"
+  stateName: Greeting
+  mainClip: {fileID: 7400000, guid: 116afd81aab53d64fb1f735e4f9f8f48, type: 2}
+  loopClip: {fileID: 0}
+  exitClip: {fileID: 7400000, guid: 01169d05ea1ed0b40a0c13cb13d4deed, type: 2}
+  timingReference: {fileID: 8300000, guid: e1a01493668073445894b33acc29bd2c, type: 3}
+  futureSubtitle: "\u4E00\u66F2\u884C\u8D70\u6C5F\u6E56\uFF0C\u4ECA\u665A\u9047\u898B\u5C11\u4FE0\uFF0C\u6709\u79AE\u4E86\u3002"
+  fallbackDuration: 3.6
+  holdStart: 1.2
+  holdEnd: 2.6
+  voiceTail: 0.3
+  continuous: 0

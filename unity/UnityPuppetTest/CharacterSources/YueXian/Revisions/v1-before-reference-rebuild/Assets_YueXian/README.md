@@ -1,0 +1,40 @@
+# 月弦公子 · 月下琴劍
+
+青藍、月白與銀玉色的月琴樂師，約六頭身。沿用原俠客的中國戲曲／掌中戲偶世界觀，以小型月牙髮冠、半束長髮、修長臉型與寬袖長袍，形成「靜、雅、柔、文」的對照。
+
+## 開啟方式
+
+- `Scenes/MoonlitDuet.unity`：《月下琴劍》雙人展示，月弦公子與原俠客同台。
+- `Scenes/YueXianPreview.unity`：月弦公子單人展示。
+- 將 `Prefabs/YueXianGongZi.prefab` 拖入其他場景，即可使用完整持琴角色。
+- `Prefabs/Yueqin.prefab`：獨立月琴道具；`Models/Yueqin.fbx` 是獨立模型來源。
+
+Play 模式：滑鼠左鍵拖曳環視、滾輪縮放、R 重設視角、空白鍵切換撥弦示範、H 隱藏文字。
+
+## 骨架與動畫
+
+`Models/YueXian.fbx` 以 T pose 匯出，角色 Prefab 保存持琴姿勢。骨架共 52 根骨頭，其中 51 根映射至 Unity Humanoid，含左右各五指、每指三節。Root 位於腳下，長袍下也保留完整雙腿與腳趾骨架。
+
+主要階層為 Root → Pelvis → Spine → Chest → Neck → Head；Chest 下接雙肩與手臂，Pelvis 下接雙腿。衣服、頭髮和五官均已配置骨骼權重。長袍採簡化蒙皮，沒有布料模擬；大跨步或極端抬腿需另外調整裙擺。
+
+`YueXianPerformance` 提供輕微呼吸及右手撥弦。將 Humanoid Animator Controller 指派至角色 Animator 後，示範腳本會讓動畫控制骨架。自訂演奏動畫時，請保留扶琴姿勢，或以左手 IK 對準月琴上的 `Yueqin_LeftGrip`。本次提供模型與動作示範，未加入演奏音訊、口型或手部辨識映射。
+
+## 獨立月琴
+
+月琴沒有併入角色 Mesh。角色中位置為：
+
+`YueXian_Humanoid / YueXianRig / Root / Pelvis / Spine / Chest / Yueqin_Socket_Adjustable / Yueqin_Independent`
+
+調整 `Yueqin_Socket_Adjustable` 可移動整把琴；琴上的 `Yueqin_LeftGrip` 與 `Yueqin_StrumPoint` 是左右手對位參考。`Yueqin_FaceForward`、`Yueqin_NeckTip` 是方向標記。材質與各琴框、琴面、四弦、琴軸、琴穗物件可單獨編輯。
+
+## 來源與重建
+
+主專案的 `CharacterSources/YueXian` 保存 Blender 原檔與生成工具，避免 Unity 自動匯入 `.blend` 時連同攝影機、燈光和預覽底座一起導入。
+
+可編輯原檔是 `CharacterSources/YueXian/Source/YueXian_and_Yueqin.blend`。使用生成工具時可傳入 `--unity-project "專案根目錄"`；FBX 會輸出至指定 Unity 專案，Blender 原檔與美術預覽仍保存於工具所在來源資料夾。請用 Blender 的 `--factory-startup` 啟動批次生成，避免個人外掛干擾。
+
+Unity 選單「掌中智戲 → 月下琴劍 → 建立月弦公子與雙角色場景」可重建本資料夾內的 Prefab 與兩個展示場景。重建會覆寫這些生成資產的手動修改；需要保留修改時請先複製 Prefab 或場景。原俠客模型與原場景不會被此指令覆寫。
+
+`YueXianReports` 保存 Unity 匯入、Humanoid／持琴檢查、Play 模式測試結果和舞台預覽。
+
+整合時加入 Unity 內建的 `imageconversion` 模組，供編輯器輸出預覽圖片；既有 `PuppetVisualEnhancer` 增加庭院物件檢查，使舊庭院燈光只作用於原庭院。修改前的兩個檔案保存在 `CharacterSources/YueXian/IntegrationBackup`。

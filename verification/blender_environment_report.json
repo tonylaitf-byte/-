@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "model": "C:\\Users\\Detion0\\Documents\\Codex\\2026-07-08\\new-chat\\PuppetTeamDocker\\unity\\UnityPuppetTest\\Assets\\Environment\\MoonlitTemple\\moonlit_temple_v8_architecture.fbx",
+  "requireRig": false,
+  "objectCount": 628,
+  "meshCount": 628,
+  "armatureCount": 0,
+  "boneCount": 0,
+  "vertexCount": 81792,
+  "polygonCount": 79304,
+  "materialCount": 14,
+  "actionCount": 0,
+  "armatures": [],
+  "bones": [],
+  "materials": [
+    "aged dark timber",
+    "blue black roof tile",
+    "carved blue grey stone",
+    "moonlit foliage",
+    "v8 carved dark timber",
+    "v8 carved moonlit stone",
+    "v8 glazed blue black roof tile",
+    "v8 lacquered red lattice",
+    "v8 warm window paper",
+    "v8 weathered cinnabar timber",
+    "v8 weathered gilt carving",
+    "warm lantern glow",
+    "weathered gold detail",
+    "wet courtyard stone"
+  ],
+  "actions": []
+}

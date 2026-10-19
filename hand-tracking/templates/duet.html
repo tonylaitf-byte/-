@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>月下琴劍 · 雙人手勢模式</title>
+  <style>
+    :root { color-scheme:dark; font-family:"Microsoft JhengHei",sans-serif; color:#edf3f4; background:#0b141c; }
+    * { box-sizing:border-box; } body { margin:0; } main { max-width:1320px; margin:auto; padding:22px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    h1 { font-size:26px; margin:8px 0; } h2 { font-size:21px; margin:0 0 12px; }
+    a { color:#92d6df; text-decoration:none; } p { line-height:1.7; color:#b8cad1; }
+    button { font:inherit; color:#fff; background:#255768; border:1px solid #75bbcb; border-radius:8px; padding:11px 22px; cursor:pointer; }
+    button:disabled { opacity:.5; } .layout { display:grid; grid-template-columns:240px minmax(0,1fr) 240px; gap:16px; margin-top:18px; }
+    .panel,.preview { border:1px solid #304753; background:#12232d; border-radius:12px; overflow:hidden; }
+    .panel { padding:17px; } .musician { border-top:4px solid #90cadc; } .warrior { border-top:4px solid #d8bd7c; }
+    .preview { position:relative; aspect-ratio:4/3; align-self:start; background:#040a10; }
+    .preview img { width:100%; height:100%; object-fit:contain; display:block; }
+    .empty { position:absolute; inset:0; display:grid; place-items:center; text-align:center; padding:22px; color:#b8cad1; }
+    .empty[hidden] { display:none; } .mapping { display:grid; gap:10px; margin:18px 0; }
+    .mapping div { padding:9px; border:1px solid #304753; border-radius:6px; font-size:15px; }
+    .metric { margin-top:14px; color:#b8cad1; } .metric strong { display:block; color:#edf3f4; margin-top:5px; font-size:22px; }
+    .bar { height:8px; background:#304753; border-radius:8px; overflow:hidden; margin-top:8px; } .bar div { height:100%; background:#91cedf; width:0; }
+    .rules { padding:14px 20px; border:1px solid #304753; border-radius:10px; margin-top:16px; }
+    .ok { color:#9bdbb6; } .warn { color:#e4c77c; } video,canvas { display:none; }
+    @media(max-width:1050px) { .layout { grid-template-columns:1fr 1fr; } .preview { grid-row:1; grid-column:1/3; } }
+    @media(max-width:600px) { main { padding:12px; } .panel { padding:12px; } h1 { font-size:22px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header><div><a href="/">← 返回模式選擇</a><h1>月下琴劍 · 雙人手勢模式</h1></div><button id="cameraButton">開啟鏡頭</button></header>
+  <p id="status" class="warn">正在啟動攝影機…</p>
+  <div class="layout">
+    <section class="panel warrior" id="leftPanel">
+      <h2>左側 · 俠客</h2><div id="leftOwner">等待左區的手</div>
+      <div class="mapping"><div>1 食指 → 鞠躬</div><div>2 食指＋中指 → 賞月</div><div>3 拇指＋食指＋中指 → 喝酒</div><div>4 拇指收掌、其餘四指 → 警惕</div><div>5 五指攤開 → 舞劍</div></div>
+      <div class="metric">目前手勢<strong id="leftGesture">—</strong><div class="bar"><div id="leftHold"></div></div></div>
+      <div class="metric">左區平移<strong id="leftMovement">中間</strong></div>
+    </section>
+    <section class="preview" aria-label="雙人手勢攝影機預覽"><img id="preview" alt="左俠客、右琴師的雙手辨識預覽"><div id="empty" class="empty">攝影機啟動中…</div></section>
+    <section class="panel musician" id="rightPanel">
+      <h2>右側 · 月弦公子</h2><div id="rightOwner">等待右區的手</div>
+      <div class="mapping"><div>1 食指 → 抱琴行禮</div><div>2 食指＋中指 → 慢速撥琴</div><div>3 拇指＋食指＋中指 → 停琴回應</div><div>4 拇指收掌、其餘四指 → 急弦挑戰</div><div>5 五指攤開 → 快速演奏</div></div>
+      <div class="metric">目前手勢<strong id="rightGesture">—</strong><div class="bar"><div id="rightHold"></div></div></div>
+      <div class="metric">右區平移<strong id="rightMovement">中間</strong></div>
+    </section>
+  </div>
+  <div class="rules"><p>以預覽畫面的左右區域控制角色，兩區都接受左手或右手；手勢穩定 0.5 秒即自動觸發。中央 45%～55% 是緩衝區。</p><p>控制權建立後，短暫遮擋或移過中央不會換角，失去追蹤超過 1 秒才釋放。角色可在各自半邊平移，無法越過舞台中央。</p><p>兩人動作可同時進行，台詞與字幕輪流播放。每次動作和台詞會完整完成，再讀取當下手勢；不累積待播動作。請在 Unity 的雙人測試場景按 Play。</p></div>
+  <video id="camera" autoplay muted playsinline></video><canvas id="canvas" width="640" height="480"></canvas>
+</main>
+<script>
+  const video=document.querySelector('#camera'), canvas=document.querySelector('#canvas'), context=canvas.getContext('2d',{alpha:false});
+  const button=document.querySelector('#cameraButton'), preview=document.querySelector('#preview'), empty=document.querySelector('#empty'), status=document.querySelector('#status');
+  let stream=null, sending=false, lastCapture=0, modeRequest=null;
+  function setStatus(text, ok) { status.textContent=text;status.className=ok?'ok':'warn'; }
+  async function ensureDuetMode() {
+    if(!modeRequest) modeRequest=fetch('/control_mode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'duet'})})
+      .then(response=>{if(!response.ok)throw new Error('雙人辨識服務尚未就緒');}).finally(()=>{modeRequest=null;});
+    return modeRequest;
+  }
+  async function startCamera() {
+    if(stream||button.disabled)return;button.disabled=true;
+    try {
+      await ensureDuetMode();
+      stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},frameRate:{ideal:30}},audio:false});
+      video.srcObject=stream;await video.play();canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;
+      preview.src='/video_feed?duet='+Date.now();empty.hidden=true;button.textContent='停止鏡頭';setStatus('雙人手勢辨識中 · 左俠客／右琴師',true);requestAnimationFrame(capture);
+    } catch(error) {
+      if(stream)stream.getTracks().forEach(track=>track.stop());stream=null;video.srcObject=null;
+      empty.hidden=false;empty.textContent=error.name==='NotAllowedError'?'請允許攝影機存取，再按「開啟鏡頭」重試。':error.message;
+      setStatus('無法開啟攝影機',false);
+    } finally { button.disabled=false; }
+  }
+  function stopCamera() {
+    if(stream)stream.getTracks().forEach(track=>track.stop());stream=null;video.srcObject=null;
+    preview.removeAttribute('src');empty.hidden=false;empty.textContent='按「開啟鏡頭」重新開始';button.textContent='開啟鏡頭';setStatus('攝影機已停止',false);
+  }
+  async function sendFrame(blob) {
+    try {const response=await fetch('/frame',{method:'POST',headers:{'Content-Type':'image/jpeg'},body:blob,cache:'no-store'});if(!response.ok)throw new Error('frame failed');}
+    catch(_){setStatus('辨識服務未連線',false);}finally{sending=false;}
+  }
+  function capture(timestamp) {
+    if(!stream)return;
+    if(!sending&&timestamp-lastCapture>=33&&video.readyState>=2) {
+      sending=true;lastCapture=timestamp;context.drawImage(video,0,0,canvas.width,canvas.height);
+      canvas.toBlob(blob=>blob?sendFrame(blob):sending=false,'image/jpeg',.76);
+    }
+    requestAnimationFrame(capture);
+  }
+  function updateRole(side,state) {
+    state=state||{};document.querySelector('#'+side+'Gesture').textContent=state.gesture||'—';
+    document.querySelector('#'+side+'Hold').style.width=Math.round(Number(state.gestureHold||0)*100)+'%';
+    document.querySelector('#'+side+'Owner').textContent=state.handDetected?'控制中 · '+(state.handedness==='Left'?'左手':state.handedness==='Right'?'右手':'手部'):
+      state.ownerHeld?'暫失追蹤 · 保留控制權':'等待區域內的手';
+    const movement=Number(state.bodyX||0);document.querySelector('#'+side+'Movement').textContent=(movement<-.08?'向左':movement>.08?'向右':'中間')+'　'+movement.toFixed(2);
+  }
+  async function refreshState() {
+    try {
+      const response=await fetch('/duet_state',{cache:'no-store'});if(!response.ok)throw new Error('state failed');
+      const state=await response.json();if(stream&&state.controlMode!=='duet')await ensureDuetMode();
+      updateRole('left',state.left);updateRole('right',state.right);
+      if(stream)setStatus('雙人手勢辨識中 · 左俠客／右琴師',true);
+    } catch(_){setStatus('雙人辨識服務未連線',false);}
+  }
+  button.addEventListener('click',()=>stream?stopCamera():startCamera());window.addEventListener('pagehide',stopCamera);
+  setInterval(refreshState,100);refreshState();startCamera();
+</script>
+</body></html>

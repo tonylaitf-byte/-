@@ -1,0 +1,37 @@
+{
+  "hands": {
+    "Left": {
+      "vertices": 11698,
+      "connected_components": 1,
+      "boundary_edges": 0,
+      "non_manifold_edges": 0,
+      "four_finger_sections": 4,
+      "thumb_sections": 1,
+      "sections_closed": true,
+      "euler_characteristic": 2,
+      "sleeve_interior_wrist_sections": 1,
+      "forearm_extension_metres": 0.14869985956465825,
+      "posed_thumb_up": 0.8276416659355164,
+      "posed_cuff_skin_sections": 1,
+      "posed_cuff_skin_closed": true,
+      "passed": true
+    },
+    "Right": {
+      "vertices": 11698,
+      "connected_components": 1,
+      "boundary_edges": 0,
+      "non_manifold_edges": 0,
+      "four_finger_sections": 4,
+      "thumb_sections": 1,
+      "sections_closed": true,
+      "euler_characteristic": 2,
+      "sleeve_interior_wrist_sections": 1,
+      "forearm_extension_metres": 0.1486998752652653,
+      "posed_thumb_up": 0.9118263125419617,
+      "posed_cuff_skin_sections": 1,
+      "posed_cuff_skin_closed": true,
+      "passed": true
+    }
+  },
+  "passed": true
+}

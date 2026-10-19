@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>掌中智戲 · 開始演出</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/static/theatre-ui/theatre.css"></head>
+<body class="setup-page">
+  <header class="site-header"><a class="brand" href="/">掌中<span>智戲</span><small>PALM THEATRE</small></a><span class="header-note">手起，戲開。</span></header>
+  <main class="setup-layout">
+    <section class="intro">
+      <div class="eyebrow">月下琴劍 · 互動布袋戲</div>
+      <h1>一方舞台，<br>盡在<span>掌中。</span></h1>
+      <p>以手為引，讓俠客與琴師登場。<br>選擇演出人數與操作方式，開始你的故事。</p>
+      <div class="moon-art" aria-hidden="true"><div class="moon"></div><div class="moon-ring"></div><span class="seal">掌<br>中<br>戲</span><div class="horizon"></div></div>
+      <div class="intro-footer"><span>即時手部辨識</span><i></i><span>Unity 立體舞台</span><i></i><span>台語語音演出</span></div>
+    </section>
+    <form class="setup-card" action="/control" method="get" id="setup-form">
+      <div class="card-heading"><span>演出設定</span><small>準備登台</small></div>
+      <fieldset><legend><em>01</em> 演出人數</legend>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="players" value="1" checked><span class="choice-body"><span class="choice-top"><b>一人演出</b><span class="check">✓</span></span><strong class="choice-symbol">俠</strong><span>俠客獨演</span><small>一隻手，控制一位俠客</small></span></label>
+          <label class="choice"><input type="radio" name="players" value="2"><span class="choice-body"><span class="choice-top"><b>兩人對戲</b><span class="check">✓</span></span><strong class="choice-symbol">琴 · 劍</strong><span>俠客 × 琴師</span><small>左側俠客，右側琴師</small></span></label>
+        </div>
+      </fieldset>
+      <fieldset><legend><em>02</em> 操作模式</legend>
+        <div class="choices modes">
+          <label class="choice"><input type="radio" name="mode" value="gesture" checked><span class="choice-body"><span class="choice-top"><b>手勢動作</b><span class="check">✓</span></span><span>五個手勢，五段演出</span><small>觸發完整動作、台語語音與字幕</small></span></label>
+          <label class="choice"><input type="radio" name="mode" value="mapping"><span class="choice-body"><span class="choice-top"><b>手部映射</b><span class="check">✓</span></span><span>隨手而動，自由操偶</span><small>即時控制頭部、雙臂與身體</small></span></label>
+        </div>
+      </fieldset>
+      <div class="selection-summary"><span>本次演出</span><strong id="selection-summary">一人 · 俠客 · 手勢動作</strong></div>
+      <button class="primary start-button" type="submit">進入舞台 <span aria-hidden="true">↗</span></button>
+      <p class="permission-note">進入舞台後會啟動攝影機，首次使用請允許存取。<br>只使用影像辨識，不開啟麥克風。</p>
+    </form>
+  </main>
+  <footer class="setup-footer">傳統掌中戲，從你的手開始。</footer>
+  <script src="/static/theatre-ui/setup.js"></script>
+</body></html>
