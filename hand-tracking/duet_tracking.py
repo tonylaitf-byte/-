@@ -6,6 +6,7 @@ import time
 from types import SimpleNamespace
 
 from gesture_recognizer import GestureActionRecognizer, GestureMovementTracker
+from hand_identity import StableHandedness
 
 
 def palm_center(points):
@@ -14,8 +15,9 @@ def palm_center(points):
 
 
 class DuetHandRouter:
-    def __init__(self, lost_grace=1.0):
+    def __init__(self, lost_grace=1.0, recognizer_factory=GestureActionRecognizer):
         self.lost_grace = lost_grace
+        self.recognizer_factory = recognizer_factory
         self.lock = threading.RLock()
         self.reset()
 
@@ -24,14 +26,14 @@ class DuetHandRouter:
             self.tracks = {}
             self.visible = {}
             self.next_id = 1
-            self.recognizers = {side: GestureActionRecognizer() for side in ('left', 'right')}
+            self.recognizers = {side: self.recognizer_factory() for side in ('left', 'right')}
             self.movement = {side: GestureMovementTracker() for side in ('left', 'right')}
 
-    def update(self, hands, timestamp=None):
+    def update(self, hands, timestamp=None, gesture_enabled=None):
         with self.lock:
-            return self._update(hands, time.monotonic() if timestamp is None else timestamp)
+            return self._update(hands, time.monotonic() if timestamp is None else timestamp, gesture_enabled)
 
-    def _update(self, hands, now):
+    def _update(self, hands, now, gesture_enabled=None):
         for track_id, track in list(self.tracks.items()):
             if now - track['seen'] > self.lost_grace:
                 if track['owner']:
@@ -60,10 +62,16 @@ class DuetHandRouter:
                     cost += .65
                     continue
                 track = self.tracks[track_id]
-                distance = math.dist(observation['center'], track['center'])
+                elapsed = max(0, now - track['seen'])
+                predicted = tuple(c + v * min(elapsed, .1) for c, v in
+                                  zip(track['center'], track.get('velocity', (0, 0))))
+                distance = math.dist(observation['center'], predicted)
                 mismatch = bool(observation.get('handedness') and track['handedness'] and
                                 observation['handedness'] != track['handedness'])
-                cost += distance + (1.0 if mismatch else 0) if distance < .65 else 10
+                # During continuous tracking position outweighs label flicker.
+                # After a gap, an opposite hand cannot steal a reserved zone.
+                penalty = (1.0 if elapsed > .35 else .08) if mismatch else 0
+                cost += distance + penalty if distance < .65 else 10
             if cost < best_cost:
                 best, best_cost = assignment, cost
         visible = {}
@@ -71,14 +79,22 @@ class DuetHandRouter:
             if track_id is None:
                 track_id = self.next_id
                 self.next_id += 1
-                self.tracks[track_id] = {'owner': None, 'handedness': observation.get('handedness', '')}
+                self.tracks[track_id] = {'owner': None, 'handedness': '', 'identity': StableHandedness()}
             track = self.tracks[track_id]
+            elapsed = now - track.get('seen', now)
+            track['velocity'] = (tuple(max(-3, min(3, (c-p)/elapsed)) for c, p in
+                                       zip(observation['center'], track['center']))
+                                 if 0 < elapsed <= .35 else (0, 0))
             track.update(center=observation['center'], seen=now)
-            if observation.get('handedness'):
-                track['handedness'] = observation['handedness']
+            track['identity'].update(observation.get('handedness', ''), now,
+                                     observation.get('confidence', 1.0))
+            track['handedness'] = track['identity'].label
             visible[track_id] = observation
 
         self.visible = visible
+        for track_id, track in self.tracks.items():
+            if track_id not in visible:
+                track['identity'].interrupt()
         occupied = {track['owner'] for track in self.tracks.values() if track['owner']}
         for track_id, observation in visible.items():
             track = self.tracks[track_id]
@@ -95,7 +111,10 @@ class DuetHandRouter:
             owner = next(((key, track) for key, track in self.tracks.items() if track['owner'] == side), None)
             observation = visible.get(owner[0]) if owner else None
             points = observation['landmarks'] if observation else None
-            gesture = self.recognizers[side].update(points, now)
+            if gesture_enabled is None:
+                gesture = self.recognizers[side].update(points, now)
+            else:
+                gesture = self.recognizers[side].update(points, now, enabled=gesture_enabled[side])
             if points:
                 lo, hi = (0, .45) if side == 'left' else (.55, 1)
                 normalized = [SimpleNamespace(x=(p.x-lo)/(hi-lo), y=p.y, z=getattr(p, 'z', 0)) for p in points]
@@ -108,6 +127,7 @@ class DuetHandRouter:
             result[side] = {
                 'version': 2, 'controlMode': 'gesture', 'handDetected': bool(observation),
                 'ownerHeld': bool(owner), 'ownerId': owner[0] if owner else 0,
+                'ownerRevision': owner[1]['identity'].revision if owner else 0,
                 'handedness': owner[1]['handedness'] if owner else '',
                 'palmX': owner[1]['center'][0] if owner else .225 if side == 'left' else .775,
                 'gesture': gesture['gesture'], 'gestureHold': gesture['gestureHold'],
@@ -115,4 +135,7 @@ class DuetHandRouter:
                 'actionSequence': gesture['actionSequence'], 'bodyX': round(movement, 4),
                 'moveX': round(movement, 4),
             }
+            if gesture_enabled is not None:
+                result[side].update({key: gesture[key] for key in
+                                    ('gestureArmed', 'inputEpoch', 'action')})
         return result

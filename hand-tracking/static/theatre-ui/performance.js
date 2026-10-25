@@ -2,12 +2,14 @@
 (() => {
   const $ = id => document.getElementById(id);
   const query = new URLSearchParams(location.search);
-  const config = {players: query.get('players') === '2' ? 2 : 1, mode: query.get('mode') === 'mapping' ? 'mapping' : 'gesture'};
-  const duet = config.players === 2, mapping = config.mode === 'mapping';
+  const requestedMode = query.get('mode');
+  const config = {players: query.get('players') === '2' ? 2 : 1, mode: ['mapping', 'hybrid'].includes(requestedMode) ? requestedMode : 'gesture'};
+  const duet = config.players === 2, hybrid = config.mode === 'hybrid', mapping = config.mode !== 'gesture';
   const video = $('preview'), overlay = $('hand-overlay'), overlayContext = overlay.getContext('2d');
   let unity = null, session = null, stream = null, ready = false, paused = false, leaving = false;
   let generation = 0, cameraGeneration = 0, cameraStarting = false, sending = false, sequence = 0, lastCapture = 0;
   let readyWaiter = null, latestStatus = null, requestError = false;
+  let inputRevision = 0, inputPending = false;
   let cameraWorker = null, lastResult = 0, overlayTimeout = null;
   let metricStart = 0, cameraFrames = 0, recognizedFrames = 0, previousPresented = null;
   const connections = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[0,17],[17,18],[18,19],[19,20]];
@@ -15,15 +17,19 @@
   const musicianNames = ['抱琴行禮', '慢速撥琴', '停琴回應', '急弦挑戰', '快速演奏'];
   const poses = ['僅伸出食指', '食指＋中指', '拇指＋食指＋中指', '拇指收進掌心，其餘四指伸出', '五指張開'];
   $('performance-title').textContent = duet ? '月下琴劍 · 兩人對戲' : '俠客 · 一人演出';
-  $('mode-label').textContent = mapping ? '手部映射' : '手勢動作';
+  $('mode-label').textContent = hybrid ? '混合操控' : mapping ? '手部映射' : '手勢動作';
   $('zone-labels').hidden = !duet;
   $('instrument').hidden = !(duet && mapping);
   $('stage-hint').textContent = duet ? '左側俠客、右側琴師。每人使用一隻手，左右手皆可；兩個角色各自留在舞台半邊。' : '單人預設角色為俠客。使用一隻手即可操作，左右手皆可。';
-  $('help-title').textContent = mapping ? '自然姿勢校正後開始操偶' : '手勢維持 0.5 秒，開始演出';
+  $('help-title').textContent = hybrid ? '即時操偶 · 手勢演出' : mapping ? '自然姿勢校正後開始操偶' : '手勢維持 0.5 秒，開始演出';
   const help = $('instructions');
   if (mapping) {
-    help.innerHTML = '<p>拇指 → 左臂<br>小指 → 右臂<br>中指 → 頭部<br>移動、轉動手掌 → 身體</p><p>將手放在舒適位置，保持自然姿勢約 1.5 秒，等待校正完成。映射模式以即時操偶為主，不自動播放整段台詞。</p>';
-  } else {
+    help.innerHTML = '<p>拇指 → 左臂<br>小指 → 右臂<br>中指 → 頭部<br>移動、轉動手掌 → 身體</p>';
+    const detail = document.createElement('p');
+    detail.textContent = hybrid ? '校正完成後，先保持非 1–5 的自然手勢 0.2 秒，再維持指定手勢 0.5 秒。每次觸發後須回到自然手勢；相同動作冷卻 3 秒。' : '將手放在舒適位置，保持自然姿勢約 1.5 秒，等待校正完成。映射模式以即時操偶為主，不自動播放整段台詞。';
+    help.append(detail);
+  }
+  if (!mapping || hybrid) {
     poses.forEach((pose, i) => {
       const row = document.createElement('div'); row.className = 'gesture-row';
       const number = document.createElement('b'); number.textContent = i + 1;
@@ -31,7 +37,7 @@
       const action = document.createElement('small'); action.textContent = warriorNames[i] + (duet ? ' ／ ' + musicianNames[i] : '');
       text.append(action); row.append(number, text); help.append(row);
     });
-    const detail = document.createElement('p'); detail.textContent = duet ? '動作與台詞完整播放，兩角台詞輪流進行。手掌左右移動可平移角色。' : '動作與台詞完整播放；手掌左右移動可平移角色。'; help.append(detail);
+    if (!hybrid) { const detail = document.createElement('p'); detail.textContent = duet ? '動作與台詞完整播放，兩角台詞輪流進行。手掌左右移動可平移角色。' : '動作與台詞完整播放；手掌左右移動可平移角色。'; help.append(detail); }
   }
   if (duet) { const note = document.createElement('p'); note.textContent = '辨識畫面左區控制俠客、右區控制琴師，中央 45%–55% 為緩衝區。'; help.append(note); }
   const sides = duet ? ['left', 'right'] : ['left'];
@@ -39,16 +45,23 @@
     const role = document.createElement('section'); role.className = 'role-state';
     const name = side === 'left' ? '俠客' : '琴師';
     role.innerHTML = `<header><strong>${duet ? (side === 'left' ? '左側 · ' : '右側 · ') : ''}${name}</strong><span id="${side}-owner">等待手部</span></header><div class="role-detail" id="${side}-detail">${mapping ? '等待自然姿勢校正' : '等待穩定手勢'}</div><div class="meter"><span id="${side}-progress"></span></div>`;
+    if (hybrid) {
+      const gesture = document.createElement('div'); gesture.className = 'hybrid-gesture';
+      gesture.id = side + '-gesture'; gesture.textContent = '等待校正 · 手勢未啟用';
+      const meter = document.createElement('div'); meter.className = 'meter hybrid-meter';
+      const fill = document.createElement('span'); fill.id = side + '-gesture-progress'; meter.append(fill);
+      role.append(gesture, meter);
+    }
     if (mapping) { const button = document.createElement('button'); button.className = 'calibrate'; button.textContent = duet ? '重新校正' + name : '重新校正'; button.disabled = true; button.dataset.side = side; button.addEventListener('click', () => calibrate(side)); role.append(button); }
     $('role-states').append(role);
   });
   function feedback(message, error = false) { $('feedback').textContent = message; $('feedback').classList.toggle('error', error); }
   function controls() {
-    $('camera-button').disabled = !ready || cameraStarting || paused;
-    $('pause').disabled = !ready;
+    $('camera-button').disabled = !ready || cameraStarting || paused || inputPending;
+    $('pause').disabled = !ready || inputPending;
     $('reset').disabled = !ready;
     $('instrument').disabled = !ready;
-    document.querySelectorAll('.calibrate').forEach(b => b.disabled = !ready || paused);
+    document.querySelectorAll('.calibrate').forEach(b => b.disabled = !ready || paused || inputPending);
   }
   function command(method, data = '') { if (unity) unity.SendMessage('TheatreBridge', method, data); }
   async function api(path, body, token = session?.sessionId) {
@@ -67,7 +80,7 @@
     if (status.error && readyWaiter) { readyWaiter.reject(new Error(status.error)); readyWaiter = null; }
     if (status.ready && readyWaiter) { readyWaiter.resolve(); readyWaiter = null; }
     if (status.ready) {
-      $('subtitle').textContent = status.subtitle || (mapping ? '隨手而動，自由操偶' : paused ? '演出已暫停' : '等待你的手勢，讓故事開始。');
+      $('subtitle').textContent = status.subtitle || (paused ? '演出已暫停' : mapping ? '隨手而動，自由操偶' : '等待你的手勢，讓故事開始。');
       $('stage-status').textContent = paused ? '演出已暫停' : status.speaking ? '台詞演出中' : '舞台就緒';
     }
   };
@@ -92,6 +105,7 @@
   async function begin() {
     const current = ++generation;
     ready = false; paused = false; requestError = false; latestStatus = null; sequence = 0;
+    inputRevision++; inputPending = false;
     stopLocalCamera(); controls(); $('pause').textContent = '暫停演出';
     $('loading').hidden = false; $('retry').hidden = true; $('load-progress').hidden = false;
     $('loading-label').textContent = '正在準備演出…'; $('subtitle').textContent = '舞台準備中';
@@ -128,6 +142,7 @@
     if (cameraWorker) cameraWorker.terminate();
     cameraWorker = null; sending = false; lastResult = 0;
     clearTimeout(overlayTimeout); drawHands([]);
+    if (hybrid) sides.forEach(side => updateRole(side, {}));
     if (stream) stream.getTracks().forEach(track => track.stop());
     stream = null; video.srcObject = null;
     $('camera-metrics').textContent = '鏡頭未開啟';
@@ -148,6 +163,11 @@
     const current = ++cameraGeneration;
     cameraStarting = true; controls(); $('camera-message').textContent = '正在啟動攝影機…';
     try {
+      if (hybrid) {
+        inputRevision++;
+        await api('/performance/input-stop', {});
+        if (current !== cameraGeneration || leaving || !ready) return;
+      }
       if (!navigator.mediaDevices?.getUserMedia) throw new Error('這個瀏覽器無法開啟攝影機，請使用本機 Chrome 或 Edge。');
       const acquired = await navigator.mediaDevices.getUserMedia({video: {width: {ideal: 640}, height: {ideal: 480}, frameRate: {ideal: 30}}, audio: false});
       if (current !== cameraGeneration || leaving || !ready) { acquired.getTracks().forEach(track => track.stop()); return; }
@@ -160,6 +180,7 @@
       cameraWorker.onmessage = ({data}) => {
         if (current !== cameraGeneration || leaving || !ready) return;
         sending = false;
+        if (data.inputRevision !== inputRevision) return;
         if (data.error) { handleInputError(Object.assign(new Error(data.error), {status:data.status})); return; }
         if (paused || data.result.sessionId !== session?.sessionId) return;
         recognizedFrames++; lastResult = performance.now();
@@ -214,13 +235,14 @@
       $('camera-metrics').textContent = paused ? '辨識已暫停' : `${metadata ? '鏡頭 ' + Math.round(cameraFrames / seconds) + ' FPS · ' : ''}辨識 ${Math.round(recognizedFrames / seconds)} FPS`;
       metricStart = timestamp; cameraFrames = 0; recognizedFrames = 0;
     }
-    if (!paused && ready && !sending && timestamp - lastCapture >= 30 && video.readyState >= 2) {
+    if (!paused && !inputPending && ready && !sending && timestamp - lastCapture >= 30 && video.readyState >= 2) {
       sending = true; lastCapture = timestamp;
-      const token = session.sessionId, worker = cameraWorker;
+      const token = session.sessionId, worker = cameraWorker, revision = inputRevision;
+      const calibrationRevision = session.calibrationRevision;
       createImageBitmap(video).then(bitmap => {
         if (current !== cameraGeneration || worker !== cameraWorker) { bitmap.close(); return; }
-        if (!ready || paused || session?.sessionId !== token) { bitmap.close(); sending = false; return; }
-        worker.postMessage({bitmap, sessionId:token}, [bitmap]);
+        if (!ready || paused || inputPending || revision !== inputRevision || session?.sessionId !== token) { bitmap.close(); sending = false; return; }
+        worker.postMessage({bitmap, sessionId:token, inputRevision:revision, calibrationRevision}, [bitmap]);
       }).catch(error => { if (current === cameraGeneration) { sending = false; handleInputError(error); } });
     }
     scheduleCapture(current);
@@ -237,9 +259,18 @@
       const gesture = Number(state.gesture || 0), name = (side === 'right' ? musicianNames : warriorNames)[gesture - 1];
       $(side + '-detail').textContent = detected && name ? `${gesture} · ${name} · ${Number(progress) >= 1 ? '已確認' : '確認中'}` : '等待穩定手勢';
     }
+    if (hybrid) {
+      const gesture = Number(controlsState.gesture || 0);
+      const names = side === 'right' ? musicianNames : warriorNames;
+      const lastIndex = ['BOW', 'LANDSCAPE', 'DRINK', 'ALERT', 'ATTACK'].indexOf(controlsState.action);
+      const latest = lastIndex >= 0 ? ` · 最近：${names[lastIndex]} #${controlsState.actionSequence}` : '';
+      $(side + '-gesture').textContent = !detected ? '無追蹤 · 手勢未啟用' : !controlsState.calibrated ? '校正中 · 手勢未啟用' : `${gesture ? gesture + ' · ' + names[gesture - 1] : '自然手勢'} · ${controlsState.gestureArmed ? (gesture ? '確認中' : '已就緒') : '等待自然手勢 0.2 秒'}${latest}`;
+      $(side + '-gesture-progress').style.width = Math.round(Math.max(0, Math.min(1, Number(controlsState.gestureHold) || 0)) * 100) + '%';
+    }
   }
   function applyState(result) {
-    if (paused || result.sessionId !== session?.sessionId) return;
+    if (paused || inputPending || result.sessionId !== session?.sessionId) return;
+    if (result.discardedFrame || result.calibrationRevision !== session.calibrationRevision) return;
     const state = result.state;
     sides.forEach(side => updateRole(side, duet ? state[side] : state));
     command('ReceiveState', JSON.stringify({sessionId: session.sessionId, sequence: ++sequence, state: JSON.stringify(state)}));
@@ -262,10 +293,10 @@
       // Frames carry their own atomic state. Poll only when idle/stalled so the
       // watchdog can release a lost hand without competing with normal input.
       if (!stream || paused || performance.now() - lastResult > 500) {
-        const frameAtRequest = lastResult;
+        const frameAtRequest = lastResult, revision = inputRevision;
         const result = await api('/performance/state');
         if (current !== generation || leaving || result.sessionId !== session?.sessionId) return;
-        if (lastResult === frameAtRequest) applyState(result);
+        if (lastResult === frameAtRequest && revision === inputRevision) applyState(result);
       }
     } catch (error) {
       if (current !== generation || leaving) return;
@@ -274,8 +305,30 @@
     if (current === generation && !leaving && ready) setTimeout(() => poll(current), 250);
   }
   async function calibrate(side) {
-    try { await api('/performance/calibrate', {side}); feedback('請保持自然姿勢約 1.5 秒，重新校正中。'); }
-    catch (error) { feedback(error.message, true); }
+    if (inputPending) return;
+    const current = generation;
+    inputRevision++; inputPending = true; controls();
+    clearTimeout(overlayTimeout); drawHands([]);
+    try {
+      const result = await api('/performance/calibrate', {side});
+      if (current !== generation || leaving) return;
+      session.calibrationRevision = result.calibrationRevision;
+      inputPending = false;
+      applyState(result);
+      feedback('請保持自然姿勢穩定，等待重新校正完成。');
+    }
+    catch (error) {
+      if (current !== generation || leaving) return;
+      // The reset may have completed despite a lost response. Recover its
+      // revision before allowing new frames to reach the detector.
+      try {
+        const result = await api('/performance/state');
+        if (current !== generation || leaving) return;
+        session.calibrationRevision = result.calibrationRevision;
+      } catch (recoveryError) { handleInputError(recoveryError); stopLocalCamera(); }
+      feedback(error.message, true);
+    }
+    finally { if (current === generation) { inputPending = false; controls(); } }
   }
   function cleanup() {
     if (leaving) return;
@@ -285,8 +338,32 @@
   }
   $('camera-button').addEventListener('click', () => stream ? stopCamera() : startCamera());
   $('reset').addEventListener('click', begin);
-  $('pause').addEventListener('click', () => {
-    paused = !paused; command('SetPaused', String(paused));
+  $('pause').addEventListener('click', async () => {
+    if (inputPending) return;
+    const next = !paused, current = generation;
+    if (hybrid) {
+      inputRevision++; inputPending = true;
+      if (next) {
+        paused = true; command('SetPaused', 'true');
+        clearTimeout(overlayTimeout); drawHands([]);
+        sides.forEach(side => {
+          $(side + '-gesture').textContent = '手勢已暫停';
+          $(side + '-gesture-progress').style.width = '0%';
+        });
+      }
+      controls();
+      try { await api('/performance/pause', {paused: next}); }
+      catch (error) {
+        if (current !== generation) return;
+        paused = true; command('SetPaused', 'true');
+        inputPending = false; $('pause').textContent = '繼續演出'; controls();
+        handleInputError(error); return;
+      }
+      if (current !== generation || leaving) return;
+      inputPending = false;
+      if (!next) sides.forEach(side => { $(side + '-gesture').textContent = '等待自然手勢 0.2 秒'; });
+    }
+    paused = next; command('SetPaused', String(paused));
     if (paused) { clearTimeout(overlayTimeout); drawHands([]); }
     $('pause').textContent = paused ? '繼續演出' : '暫停演出';
     $('camera-status').textContent = paused ? '辨識已暫停' : stream ? '鏡頭已開啟' : '鏡頭未開啟';

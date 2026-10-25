@@ -1,0 +1,602 @@
+{
+    "failure": "",
+    "engineDiagnostics": [
+        "ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.\r\nParameter name: index\nSystem.Collections.Generic.List`1[T].get_Item (System.Int32 index) (at <816f70bc2a9c4332b0bd119906a8d40e>:0)\nUnityEditor.Search.SearchDatabase+<EnumerateAll>d__75.MoveNext () (at <ba40de9d2c774406a299ab488f9e8db6>:0)\nSystem.Linq.Enumerable.TryGetFirst[TSource] (System.Collections.Generic.IEnumerable`1[T] source, System.Boolean& found) (at <fe644d7ad1cf499ebe4e7ad937bc03bf>:0)\nSystem.Linq.Enumerable.First[TSource] (System.Collections.Generic.IEnumerable`1[T] source) (at <fe644d7ad1cf499ebe4e7ad937bc03bf>:0)\nUnityEditor.Search.SearchDatabase.GetDefaultSearchDatabase () (at <ba40de9d2c774406a299ab488f9e8db6>:0)\nUnityEditor.Search.SearchInit.IndexationOnStartup () (at <ba40de9d2c774406a299ab488f9e8db6>:0)\nUnityEditor.EditorApplication.Internal_CallDelayFunctions () (at <2608e8670e87477ba4f8f33d8e275d95>:0)\n"
+    ],
+    "results": [
+        {
+            "phase": "forward",
+            "role": "俠客",
+            "avoidance": false,
+            "frames": 360,
+            "correctedFrames": 0,
+            "intersectionFrames": 242,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.0,
+            "maxPenetrationInShoulderSpans": 0.5416539311408997,
+            "maxWristStepInShoulderSpans": 0.017534848302602769,
+            "maxBoneStepDegrees": 2.9698071479797365,
+            "finalLeftForward": 0.9168955087661743,
+            "finalRightForward": 0.9269788265228272,
+            "finalLeftReach": 0.9800002574920654,
+            "finalRightReach": 0.9800000786781311,
+            "finalLeftLocal": {
+                "x": -0.0445399172604084,
+                "y": 1.2298728227615357,
+                "z": 0.6151919364929199
+            },
+            "finalRightLocal": {
+                "x": 0.040359679609537128,
+                "y": 1.243096113204956,
+                "z": 0.6115651726722717
+            }
+        },
+        {
+            "phase": "forward",
+            "role": "琴師",
+            "avoidance": false,
+            "frames": 360,
+            "correctedFrames": 0,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.0,
+            "maxPenetrationInShoulderSpans": 0.0,
+            "maxWristStepInShoulderSpans": 0.01678575947880745,
+            "maxBoneStepDegrees": 3.2571747303009035,
+            "finalLeftForward": 0.9091420769691467,
+            "finalRightForward": 0.9202468395233154,
+            "finalLeftReach": 0.9799999594688416,
+            "finalRightReach": 0.9800000786781311,
+            "finalLeftLocal": {
+                "x": -0.05759255588054657,
+                "y": 1.3428881168365479,
+                "z": 0.5170596837997437
+            },
+            "finalRightLocal": {
+                "x": 0.03386969491839409,
+                "y": 1.3498538732528687,
+                "z": 0.5537418723106384
+            }
+        },
+        {
+            "phase": "sweep",
+            "role": "俠客",
+            "avoidance": false,
+            "frames": 360,
+            "correctedFrames": 0,
+            "intersectionFrames": 55,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.0,
+            "maxPenetrationInShoulderSpans": 0.04589870944619179,
+            "maxWristStepInShoulderSpans": 0.018123209476470948,
+            "maxBoneStepDegrees": 0.9819725751876831,
+            "finalLeftForward": 0.04881305992603302,
+            "finalRightForward": 0.04881293699145317,
+            "finalLeftReach": 0.9024055004119873,
+            "finalRightReach": 0.9024055600166321,
+            "finalLeftLocal": {
+                "x": -0.556994616985321,
+                "y": 1.11638605594635,
+                "z": 0.24359390139579774
+            },
+            "finalRightLocal": {
+                "x": 0.5826264023780823,
+                "y": 1.1202582120895386,
+                "z": 0.20421120524406434
+            }
+        },
+        {
+            "phase": "sweep",
+            "role": "琴師",
+            "avoidance": false,
+            "frames": 360,
+            "correctedFrames": 0,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.0,
+            "maxPenetrationInShoulderSpans": 0.0,
+            "maxWristStepInShoulderSpans": 0.017155151814222337,
+            "maxBoneStepDegrees": 0.9891201257705689,
+            "finalLeftForward": 0.048813410103321078,
+            "finalRightForward": 0.0488133430480957,
+            "finalLeftReach": 0.9024051427841187,
+            "finalRightReach": 0.902405321598053,
+            "finalLeftLocal": {
+                "x": -0.578593373298645,
+                "y": 1.2293020486831666,
+                "z": 0.14878065884113313
+            },
+            "finalRightLocal": {
+                "x": 0.5849837064743042,
+                "y": 1.2269225120544434,
+                "z": 0.14951066672801972
+            }
+        },
+        {
+            "phase": "head-only",
+            "role": "俠客",
+            "avoidance": false,
+            "frames": 360,
+            "correctedFrames": 0,
+            "intersectionFrames": 360,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.0,
+            "maxPenetrationInShoulderSpans": 0.08273894339799881,
+            "maxWristStepInShoulderSpans": 0.0,
+            "maxBoneStepDegrees": 0.8811494708061218,
+            "finalLeftForward": 0.9168955087661743,
+            "finalRightForward": 0.9269788265228272,
+            "finalLeftReach": 0.9800002574920654,
+            "finalRightReach": 0.9800000786781311,
+            "finalLeftLocal": {
+                "x": -0.0445399172604084,
+                "y": 1.2298728227615357,
+                "z": 0.6151919364929199
+            },
+            "finalRightLocal": {
+                "x": 0.040359679609537128,
+                "y": 1.243096113204956,
+                "z": 0.6115651726722717
+            }
+        },
+        {
+            "phase": "head-only",
+            "role": "琴師",
+            "avoidance": false,
+            "frames": 360,
+            "correctedFrames": 0,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.0,
+            "maxPenetrationInShoulderSpans": 0.0,
+            "maxWristStepInShoulderSpans": 0.0,
+            "maxBoneStepDegrees": 0.8802607655525208,
+            "finalLeftForward": 0.9091420769691467,
+            "finalRightForward": 0.9202468395233154,
+            "finalLeftReach": 0.9799999594688416,
+            "finalRightReach": 0.9800000786781311,
+            "finalLeftLocal": {
+                "x": -0.05759255588054657,
+                "y": 1.3428881168365479,
+                "z": 0.5170596837997437
+            },
+            "finalRightLocal": {
+                "x": 0.03386969491839409,
+                "y": 1.3498538732528687,
+                "z": 0.5537418723106384
+            }
+        },
+        {
+            "phase": "forward",
+            "role": "俠客",
+            "avoidance": true,
+            "frames": 360,
+            "correctedFrames": 242,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.8680419921875,
+            "maxPenetrationInShoulderSpans": 0.00009831073839450255,
+            "maxWristStepInShoulderSpans": 0.017534848302602769,
+            "maxBoneStepDegrees": 2.783128261566162,
+            "finalLeftForward": 0.22577713429927827,
+            "finalRightForward": 0.9269788265228272,
+            "finalLeftReach": 0.7629051208496094,
+            "finalRightReach": 0.9800000786781311,
+            "finalLeftLocal": {
+                "x": -0.492214173078537,
+                "y": 1.1562848091125489,
+                "z": 0.31934654712677
+            },
+            "finalRightLocal": {
+                "x": 0.040359679609537128,
+                "y": 1.243096113204956,
+                "z": 0.6115651726722717
+            }
+        },
+        {
+            "phase": "forward",
+            "role": "琴師",
+            "avoidance": true,
+            "frames": 360,
+            "correctedFrames": 0,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.0,
+            "maxPenetrationInShoulderSpans": 0.0,
+            "maxWristStepInShoulderSpans": 0.01678575947880745,
+            "maxBoneStepDegrees": 3.2571747303009035,
+            "finalLeftForward": 0.9091420769691467,
+            "finalRightForward": 0.9202468395233154,
+            "finalLeftReach": 0.9799999594688416,
+            "finalRightReach": 0.9800000786781311,
+            "finalLeftLocal": {
+                "x": -0.05759255588054657,
+                "y": 1.3428881168365479,
+                "z": 0.5170596837997437
+            },
+            "finalRightLocal": {
+                "x": 0.03386969491839409,
+                "y": 1.3498538732528687,
+                "z": 0.5537418723106384
+            }
+        },
+        {
+            "phase": "sweep",
+            "role": "俠客",
+            "avoidance": true,
+            "frames": 360,
+            "correctedFrames": 55,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.5867919921875,
+            "maxPenetrationInShoulderSpans": 0.00009846678585745394,
+            "maxWristStepInShoulderSpans": 0.4966602325439453,
+            "maxBoneStepDegrees": 39.90153121948242,
+            "finalLeftForward": 0.04881305992603302,
+            "finalRightForward": 0.04881293699145317,
+            "finalLeftReach": 0.9024055004119873,
+            "finalRightReach": 0.9024055600166321,
+            "finalLeftLocal": {
+                "x": -0.556994616985321,
+                "y": 1.11638605594635,
+                "z": 0.24359390139579774
+            },
+            "finalRightLocal": {
+                "x": 0.5826264023780823,
+                "y": 1.1202582120895386,
+                "z": 0.20421120524406434
+            }
+        },
+        {
+            "phase": "sweep",
+            "role": "琴師",
+            "avoidance": true,
+            "frames": 360,
+            "correctedFrames": 0,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.0,
+            "maxPenetrationInShoulderSpans": 0.0,
+            "maxWristStepInShoulderSpans": 0.017155151814222337,
+            "maxBoneStepDegrees": 0.9891201257705689,
+            "finalLeftForward": 0.048813410103321078,
+            "finalRightForward": 0.0488133430480957,
+            "finalLeftReach": 0.9024051427841187,
+            "finalRightReach": 0.902405321598053,
+            "finalLeftLocal": {
+                "x": -0.578593373298645,
+                "y": 1.2293020486831666,
+                "z": 0.14878065884113313
+            },
+            "finalRightLocal": {
+                "x": 0.5849837064743042,
+                "y": 1.2269225120544434,
+                "z": 0.14951066672801972
+            }
+        },
+        {
+            "phase": "head-only",
+            "role": "俠客",
+            "avoidance": true,
+            "frames": 360,
+            "correctedFrames": 360,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.8680419921875,
+            "maxPenetrationInShoulderSpans": 0.0,
+            "maxWristStepInShoulderSpans": 0.0,
+            "maxBoneStepDegrees": 0.8811494708061218,
+            "finalLeftForward": 0.22577713429927827,
+            "finalRightForward": 0.9269788265228272,
+            "finalLeftReach": 0.7629051208496094,
+            "finalRightReach": 0.9800000786781311,
+            "finalLeftLocal": {
+                "x": -0.492214173078537,
+                "y": 1.1562848091125489,
+                "z": 0.31934654712677
+            },
+            "finalRightLocal": {
+                "x": 0.040359679609537128,
+                "y": 1.243096113204956,
+                "z": 0.6115651726722717
+            }
+        },
+        {
+            "phase": "head-only",
+            "role": "琴師",
+            "avoidance": true,
+            "frames": 360,
+            "correctedFrames": 0,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.0,
+            "maxPenetrationInShoulderSpans": 0.0,
+            "maxWristStepInShoulderSpans": 0.0,
+            "maxBoneStepDegrees": 0.8802607655525208,
+            "finalLeftForward": 0.9091420769691467,
+            "finalRightForward": 0.9202468395233154,
+            "finalLeftReach": 0.9799999594688416,
+            "finalRightReach": 0.9800000786781311,
+            "finalLeftLocal": {
+                "x": -0.05759255588054657,
+                "y": 1.3428881168365479,
+                "z": 0.5170596837997437
+            },
+            "finalRightLocal": {
+                "x": 0.03386969491839409,
+                "y": 1.3498538732528687,
+                "z": 0.5537418723106384
+            }
+        },
+        {
+            "phase": "BOW",
+            "role": "俠客",
+            "avoidance": true,
+            "frames": 545,
+            "correctedFrames": 282,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.845703125,
+            "maxPenetrationInShoulderSpans": 0.0,
+            "maxWristStepInShoulderSpans": 0.10316778719425202,
+            "maxBoneStepDegrees": 5.495176315307617,
+            "finalLeftForward": 0.22277437150478364,
+            "finalRightForward": 0.8461536169052124,
+            "finalLeftReach": 0.7627333998680115,
+            "finalRightReach": 0.8624804615974426,
+            "finalLeftLocal": {
+                "x": -0.49251142144203188,
+                "y": 1.1561660766601563,
+                "z": 0.31806114315986636
+            },
+            "finalRightLocal": {
+                "x": 0.11521057784557343,
+                "y": 1.2275974750518799,
+                "z": 0.574073076248169
+            }
+        },
+        {
+            "phase": "BOW",
+            "role": "琴師",
+            "avoidance": true,
+            "frames": 545,
+            "correctedFrames": 0,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.0,
+            "maxPenetrationInShoulderSpans": 0.0,
+            "maxWristStepInShoulderSpans": 0.10813821107149124,
+            "maxBoneStepDegrees": 6.68585729598999,
+            "finalLeftForward": 0.846153736114502,
+            "finalRightForward": 0.8461540341377258,
+            "finalLeftReach": 0.8729777932167053,
+            "finalRightReach": 0.8662374019622803,
+            "finalLeftLocal": {
+                "x": -0.12566451728343965,
+                "y": 1.3283567428588868,
+                "z": 0.49009644985198977
+            },
+            "finalRightLocal": {
+                "x": 0.10845191776752472,
+                "y": 1.3342616558074952,
+                "z": 0.5193724632263184
+            }
+        },
+        {
+            "phase": "LANDSCAPE",
+            "role": "俠客",
+            "avoidance": true,
+            "frames": 456,
+            "correctedFrames": 442,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.8450927734375,
+            "maxPenetrationInShoulderSpans": 0.00009803767170524225,
+            "maxWristStepInShoulderSpans": 0.09119571000337601,
+            "maxBoneStepDegrees": 5.523458480834961,
+            "finalLeftForward": 0.22277416288852693,
+            "finalRightForward": 0.8461536169052124,
+            "finalLeftReach": 0.762733519077301,
+            "finalRightReach": 0.8624804615974426,
+            "finalLeftLocal": {
+                "x": -0.49251165986061098,
+                "y": 1.1561661958694459,
+                "z": 0.31806111335754397
+            },
+            "finalRightLocal": {
+                "x": 0.11521057784557343,
+                "y": 1.2275974750518799,
+                "z": 0.574073076248169
+            }
+        },
+        {
+            "phase": "LANDSCAPE",
+            "role": "琴師",
+            "avoidance": true,
+            "frames": 456,
+            "correctedFrames": 0,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.0,
+            "maxPenetrationInShoulderSpans": 0.0,
+            "maxWristStepInShoulderSpans": 0.11738850921392441,
+            "maxBoneStepDegrees": 7.5373663902282719,
+            "finalLeftForward": 0.846153736114502,
+            "finalRightForward": 0.846153974533081,
+            "finalLeftReach": 0.8729777932167053,
+            "finalRightReach": 0.8662374019622803,
+            "finalLeftLocal": {
+                "x": -0.12566451728343965,
+                "y": 1.3283567428588868,
+                "z": 0.49009644985198977
+            },
+            "finalRightLocal": {
+                "x": 0.10845191776752472,
+                "y": 1.3342616558074952,
+                "z": 0.5193723440170288
+            }
+        },
+        {
+            "phase": "DRINK",
+            "role": "俠客",
+            "avoidance": true,
+            "frames": 627,
+            "correctedFrames": 613,
+            "intersectionFrames": 266,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.8447265625,
+            "maxPenetrationInShoulderSpans": 0.07438516616821289,
+            "maxWristStepInShoulderSpans": 0.171369269490242,
+            "maxBoneStepDegrees": 9.628195762634278,
+            "finalLeftForward": 0.22277416288852693,
+            "finalRightForward": 0.8461536169052124,
+            "finalLeftReach": 0.762733519077301,
+            "finalRightReach": 0.8624804615974426,
+            "finalLeftLocal": {
+                "x": -0.49251165986061098,
+                "y": 1.1561661958694459,
+                "z": 0.31806111335754397
+            },
+            "finalRightLocal": {
+                "x": 0.11521057784557343,
+                "y": 1.2275974750518799,
+                "z": 0.574073076248169
+            }
+        },
+        {
+            "phase": "DRINK",
+            "role": "琴師",
+            "avoidance": true,
+            "frames": 627,
+            "correctedFrames": 0,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.0,
+            "maxPenetrationInShoulderSpans": 0.0,
+            "maxWristStepInShoulderSpans": 0.11413973569869995,
+            "maxBoneStepDegrees": 7.113437175750732,
+            "finalLeftForward": 0.846153736114502,
+            "finalRightForward": 0.8461540341377258,
+            "finalLeftReach": 0.8729777932167053,
+            "finalRightReach": 0.8662374019622803,
+            "finalLeftLocal": {
+                "x": -0.12566451728343965,
+                "y": 1.3283567428588868,
+                "z": 0.49009644985198977
+            },
+            "finalRightLocal": {
+                "x": 0.10845191776752472,
+                "y": 1.3342616558074952,
+                "z": 0.5193724632263184
+            }
+        },
+        {
+            "phase": "ALERT",
+            "role": "俠客",
+            "avoidance": true,
+            "frames": 470,
+            "correctedFrames": 218,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.8458251953125,
+            "maxPenetrationInShoulderSpans": 0.0,
+            "maxWristStepInShoulderSpans": 0.08875636011362076,
+            "maxBoneStepDegrees": 7.578921318054199,
+            "finalLeftForward": 0.22277416288852693,
+            "finalRightForward": 0.8461536169052124,
+            "finalLeftReach": 0.762733519077301,
+            "finalRightReach": 0.8624804615974426,
+            "finalLeftLocal": {
+                "x": -0.49251165986061098,
+                "y": 1.1561661958694459,
+                "z": 0.31806111335754397
+            },
+            "finalRightLocal": {
+                "x": 0.11521057784557343,
+                "y": 1.2275974750518799,
+                "z": 0.574073076248169
+            }
+        },
+        {
+            "phase": "ALERT",
+            "role": "琴師",
+            "avoidance": true,
+            "frames": 470,
+            "correctedFrames": 0,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.0,
+            "maxPenetrationInShoulderSpans": 0.0,
+            "maxWristStepInShoulderSpans": 0.15143167972564698,
+            "maxBoneStepDegrees": 11.911636352539063,
+            "finalLeftForward": 0.846153736114502,
+            "finalRightForward": 0.8461540341377258,
+            "finalLeftReach": 0.8729777932167053,
+            "finalRightReach": 0.8662374019622803,
+            "finalLeftLocal": {
+                "x": -0.12566451728343965,
+                "y": 1.3283567428588868,
+                "z": 0.49009644985198977
+            },
+            "finalRightLocal": {
+                "x": 0.10845191776752472,
+                "y": 1.3342616558074952,
+                "z": 0.5193724632263184
+            }
+        },
+        {
+            "phase": "ATTACK",
+            "role": "俠客",
+            "avoidance": true,
+            "frames": 611,
+            "correctedFrames": 597,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.85009765625,
+            "maxPenetrationInShoulderSpans": 0.00009952010441338643,
+            "maxWristStepInShoulderSpans": 0.10014136135578156,
+            "maxBoneStepDegrees": 10.101491928100586,
+            "finalLeftForward": 0.22277416288852693,
+            "finalRightForward": 0.8461536169052124,
+            "finalLeftReach": 0.762733519077301,
+            "finalRightReach": 0.8624804615974426,
+            "finalLeftLocal": {
+                "x": -0.49251165986061098,
+                "y": 1.1561661958694459,
+                "z": 0.31806111335754397
+            },
+            "finalRightLocal": {
+                "x": 0.11521057784557343,
+                "y": 1.2275974750518799,
+                "z": 0.574073076248169
+            }
+        },
+        {
+            "phase": "ATTACK",
+            "role": "琴師",
+            "avoidance": true,
+            "frames": 611,
+            "correctedFrames": 0,
+            "intersectionFrames": 0,
+            "releaseIntersectionFrames": 0,
+            "maxCorrection": 0.0,
+            "maxPenetrationInShoulderSpans": 0.0,
+            "maxWristStepInShoulderSpans": 0.14871959388256074,
+            "maxBoneStepDegrees": 10.485909461975098,
+            "finalLeftForward": 0.846153736114502,
+            "finalRightForward": 0.846153974533081,
+            "finalLeftReach": 0.8729777932167053,
+            "finalRightReach": 0.8662374019622803,
+            "finalLeftLocal": {
+                "x": -0.12566451728343965,
+                "y": 1.3283567428588868,
+                "z": 0.49009644985198977
+            },
+            "finalRightLocal": {
+                "x": 0.10845191776752472,
+                "y": 1.3342616558074952,
+                "z": 0.5193723440170288
+            }
+        }
+    ]
+}

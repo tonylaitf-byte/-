@@ -1,0 +1,143 @@
+{
+  "passed": true,
+  "scope": "Ten actions, fixed calibrated input, 60 Hz deterministic skeleton review; not a human naturalness score.",
+  "timingChecks": true,
+  "actions": [
+    {
+      "role": "俠客",
+      "action": "BOW",
+      "speedBefore": 387.2703857421875,
+      "speedAfter": 210.4417266845703,
+      "speedDropPercent": 45.7,
+      "accelerationBefore": 8078.96435546875,
+      "accelerationAfter": 1847.082275390625,
+      "accelerationDropPercent": 77.1,
+      "releaseDropPercent": 15.2,
+      "wristSpeedDropPercent": 37.6,
+      "durationDifference": 0
+    },
+    {
+      "role": "琴師",
+      "action": "BOW",
+      "speedBefore": 846.5025634765625,
+      "speedAfter": 401.15142822265625,
+      "speedDropPercent": 52.6,
+      "accelerationBefore": 15696.0126953125,
+      "accelerationAfter": 2581.34375,
+      "accelerationDropPercent": 83.6,
+      "releaseDropPercent": 27.2,
+      "wristSpeedDropPercent": 50.6,
+      "durationDifference": 0
+    },
+    {
+      "role": "俠客",
+      "action": "LANDSCAPE",
+      "speedBefore": 530.7671508789062,
+      "speedAfter": 331.4075012207031,
+      "speedDropPercent": 37.6,
+      "accelerationBefore": 8991.0419921875,
+      "accelerationAfter": 2119.161865234375,
+      "accelerationDropPercent": 76.4,
+      "releaseDropPercent": 30.7,
+      "wristSpeedDropPercent": 38.6,
+      "durationDifference": 0
+    },
+    {
+      "role": "琴師",
+      "action": "LANDSCAPE",
+      "speedBefore": 846.5025634765625,
+      "speedAfter": 452.2419738769531,
+      "speedDropPercent": 46.6,
+      "accelerationBefore": 15696.0126953125,
+      "accelerationAfter": 3270.505126953125,
+      "accelerationDropPercent": 79.2,
+      "releaseDropPercent": 20.4,
+      "wristSpeedDropPercent": 45.8,
+      "durationDifference": 0
+    },
+    {
+      "role": "俠客",
+      "action": "DRINK",
+      "speedBefore": 708.4105834960938,
+      "speedAfter": 577.6917114257812,
+      "speedDropPercent": 18.5,
+      "accelerationBefore": 16771.8671875,
+      "accelerationAfter": 7303.5107421875,
+      "accelerationDropPercent": 56.5,
+      "releaseDropPercent": 9.3,
+      "wristSpeedDropPercent": 27.2,
+      "durationDifference": 0
+    },
+    {
+      "role": "琴師",
+      "action": "DRINK",
+      "speedBefore": 846.5025634765625,
+      "speedAfter": 426.80621337890625,
+      "speedDropPercent": 49.6,
+      "accelerationBefore": 15696.0126953125,
+      "accelerationAfter": 2904.6083984375,
+      "accelerationDropPercent": 81.5,
+      "releaseDropPercent": 27.2,
+      "wristSpeedDropPercent": 47.7,
+      "durationDifference": 0
+    },
+    {
+      "role": "俠客",
+      "action": "ALERT",
+      "speedBefore": 571.7181396484375,
+      "speedAfter": 454.7352600097656,
+      "speedDropPercent": 20.5,
+      "accelerationBefore": 9677.90234375,
+      "accelerationAfter": 3992.091796875,
+      "accelerationDropPercent": 58.8,
+      "releaseDropPercent": 26.1,
+      "wristSpeedDropPercent": 27.1,
+      "durationDifference": 0
+    },
+    {
+      "role": "琴師",
+      "action": "ALERT",
+      "speedBefore": 846.5025634765625,
+      "speedAfter": 714.6981201171875,
+      "speedDropPercent": 15.6,
+      "accelerationBefore": 19988.20703125,
+      "accelerationAfter": 11958.126953125,
+      "accelerationDropPercent": 40.2,
+      "releaseDropPercent": 12.7,
+      "wristSpeedDropPercent": 32.2,
+      "durationDifference": 0
+    },
+    {
+      "role": "俠客",
+      "action": "ATTACK",
+      "speedBefore": 651.5875854492188,
+      "speedAfter": 606.0894775390625,
+      "speedDropPercent": 7,
+      "accelerationBefore": 11472.185546875,
+      "accelerationAfter": 5333.37109375,
+      "accelerationDropPercent": 53.5,
+      "releaseDropPercent": 22.7,
+      "wristSpeedDropPercent": 26.6,
+      "durationDifference": 0
+    },
+    {
+      "role": "琴師",
+      "action": "ATTACK",
+      "speedBefore": 846.5025634765625,
+      "speedAfter": 629.154541015625,
+      "speedDropPercent": 25.7,
+      "accelerationBefore": 37178.4765625,
+      "accelerationAfter": 23247.314453125,
+      "accelerationDropPercent": 37.5,
+      "releaseDropPercent": 8.9,
+      "wristSpeedDropPercent": 29.9,
+      "durationDifference": 0
+    }
+  ],
+  "engineDiagnosticsBefore": [
+    "ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.\r\nParameter name: index\nSystem.Collections.Generic.List`1[T].get_Item (System.Int32 index) (at <816f70bc2a9c4332b0bd119906a8d40e>:0)\nUnityEditor.Search.SearchDatabase+<EnumerateAll>d__75.MoveNext () (at <ba40de9d2c774406a299ab488f9e8db6>:0)\nSystem.Linq.Enumerable.TryGetFirst[TSource] (System.Collections.Generic.IEnumerable`1[T] source, System.Boolean& found) (at <fe644d7ad1cf499ebe4e7ad937bc03bf>:0)\nSystem.Linq.Enumerable.First[TSource] (System.Collections.Generic.IEnumerable`1[T] source) (at <fe644d7ad1cf499ebe4e7ad937bc03bf>:0)\nUnityEditor.Search.SearchDatabase.GetDefaultSearchDatabase () (at <ba40de9d2c774406a299ab488f9e8db6>:0)\nUnityEditor.Search.SearchInit.IndexationOnStartup () (at <ba40de9d2c774406a299ab488f9e8db6>:0)\nUnityEditor.EditorApplication.Internal_CallDelayFunctions () (at <2608e8670e87477ba4f8f33d8e275d95>:0)\n"
+  ],
+  "engineDiagnosticsAfter": [
+    "ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.\r\nParameter name: index\nSystem.Collections.Generic.List`1[T].get_Item (System.Int32 index) (at <816f70bc2a9c4332b0bd119906a8d40e>:0)\nUnityEditor.Search.SearchDatabase+<EnumerateAll>d__75.MoveNext () (at <ba40de9d2c774406a299ab488f9e8db6>:0)\nSystem.Linq.Enumerable.TryGetFirst[TSource] (System.Collections.Generic.IEnumerable`1[T] source, System.Boolean& found) (at <fe644d7ad1cf499ebe4e7ad937bc03bf>:0)\nSystem.Linq.Enumerable.First[TSource] (System.Collections.Generic.IEnumerable`1[T] source) (at <fe644d7ad1cf499ebe4e7ad937bc03bf>:0)\nUnityEditor.Search.SearchDatabase.GetDefaultSearchDatabase () (at <ba40de9d2c774406a299ab488f9e8db6>:0)\nUnityEditor.Search.SearchInit.IndexationOnStartup () (at <ba40de9d2c774406a299ab488f9e8db6>:0)\nUnityEditor.EditorApplication.Internal_CallDelayFunctions () (at <2608e8670e87477ba4f8f33d8e275d95>:0)\n"
+  ]
+}
