@@ -1,6 +1,6 @@
 # 混合模式進度與驗收
 
-版本狀態更新（2026-10-25）：本機程式／測試已保存為 `6d8d629`，對應 WebGL 為 `af94ff7`，尚未推送 GitHub。以下保留早期階段紀錄；最新動畫交接規格以 `HYBRID_HANDOFF.md` 為準，完整修改與版本方式見 `CHANGELOG.md`、`VERSION_CONTROL.md`。
+版本狀態更新（2026-10-25）：程式／測試已保存為 `6d8d629`，對應 WebGL 為 `af94ff7`，已推送 GitHub 並建立 [PR #1](https://github.com/tonylaitf-byte/-/pull/1)，尚未合併。以下保留早期階段紀錄；最新動畫交接規格以 `HYBRID_HANDOFF.md` 為準，完整修改與版本方式見 `CHANGELOG.md`、`VERSION_CONTROL.md`。
 
 更新：2026-10-23。本次在獨立工作副本實作第三種 `hybrid` 模式，原 `gesture`、`mapping` 及原四個場景均保留。前端、後端、同影格資料傳輸、逐角色事件去重、骨架部位遮罩與動畫交接已實作；已產生包含入口及六個演出場景的 WebGL 成品。使用者改變模型配置後，未再呼叫 Astra；剩餘 Unity 修改由 Sol 接手，主代理整合測試。
 

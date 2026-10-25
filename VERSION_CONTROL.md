@@ -5,7 +5,7 @@
 - 儲存庫：https://github.com/tonylaitf-byte/-
 - 基準：`0497210`。
 - 工作分支：`codex/hybrid-stability-20261025`。
-- 目前狀態：程式與 WebGL 已建立本機提交；本文件隨修改紀錄一併提交。尚未推送或合併至 main。
+- 目前狀態：已推送獨立分支，並建立 [Pull Request #1](https://github.com/tonylaitf-byte/-/pull/1) 供組員審查；尚未合併至 main。
 - 程式／測試：`6d8d629`（feat: add hybrid puppetry and tracking stability safeguards）。
 - WebGL 成品：`af94ff7`（build: update WebGL player for stable hybrid handoff）。
 - 修改內容與已知限制：見 [CHANGELOG.md](CHANGELOG.md)。
@@ -31,7 +31,7 @@ git log --oneline --decorate -6
 git diff origin/main...HEAD --stat
 ```
 
-本分支確認可分享且已提交後，推送指令如下；此文件中的指令不代表已執行：
+本分支已完成首次推送。之後在此分支新增本機提交時，可使用：
 
 ```sh
 git push -u origin codex/hybrid-stability-20261025
