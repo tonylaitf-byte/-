@@ -1,0 +1,35 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "players": 1,
+      "mode": "mapping",
+      "oldFrameDiscarded": true,
+      "oldPollDiscarded": true,
+      "newRevisionSent": true
+    },
+    {
+      "players": 2,
+      "mode": "mapping",
+      "oldFrameDiscarded": true,
+      "oldPollDiscarded": true,
+      "newRevisionSent": true
+    },
+    {
+      "players": 1,
+      "mode": "hybrid",
+      "oldFrameDiscarded": true,
+      "oldPollDiscarded": true,
+      "newRevisionSent": true
+    },
+    {
+      "players": 2,
+      "mode": "hybrid",
+      "oldFrameDiscarded": true,
+      "oldPollDiscarded": true,
+      "newRevisionSent": true
+    }
+  ],
+  "errors": [],
+  "unityBoundary": "SendMessage capture stub; actual page and Worker, fake camera"
+}

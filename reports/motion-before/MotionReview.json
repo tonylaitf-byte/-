@@ -1,0 +1,140 @@
+{
+    "completed": true,
+    "unityVersion": "6000.5.3f1",
+    "failure": "",
+    "actions": [
+        {
+            "action": "BOW",
+            "role": "俠客",
+            "seconds": 9.500000953674317,
+            "peakDegreesPerSecond": 387.2703857421875,
+            "p95DegreesPerSecond": 147.37474060058595,
+            "peakAcceleration": 8078.96435546875,
+            "entryPeak": 387.2703857421875,
+            "actionPeak": 138.34072875976563,
+            "releasePeak": 247.04519653320313,
+            "peakWristSpeed": 2.202401876449585,
+            "frames": 571
+        },
+        {
+            "action": "BOW",
+            "role": "琴師",
+            "seconds": 9.500000953674317,
+            "peakDegreesPerSecond": 846.5025634765625,
+            "p95DegreesPerSecond": 129.1549835205078,
+            "peakAcceleration": 15696.0126953125,
+            "entryPeak": 846.5025634765625,
+            "actionPeak": 138.9910125732422,
+            "releasePeak": 436.4090576171875,
+            "peakWristSpeed": 5.3010358810424809,
+            "frames": 571
+        },
+        {
+            "action": "LANDSCAPE",
+            "role": "俠客",
+            "seconds": 8.066667556762696,
+            "peakDegreesPerSecond": 530.7671508789063,
+            "p95DegreesPerSecond": 139.9406280517578,
+            "peakAcceleration": 8991.0419921875,
+            "entryPeak": 530.7671508789063,
+            "actionPeak": 82.78054809570313,
+            "releasePeak": 252.3946533203125,
+            "peakWristSpeed": 3.2052369117736818,
+            "frames": 485
+        },
+        {
+            "action": "LANDSCAPE",
+            "role": "琴師",
+            "seconds": 8.066667556762696,
+            "peakDegreesPerSecond": 846.5025634765625,
+            "p95DegreesPerSecond": 242.3112335205078,
+            "peakAcceleration": 15696.0126953125,
+            "entryPeak": 846.5025634765625,
+            "actionPeak": 14.243287086486817,
+            "releasePeak": 436.4090576171875,
+            "peakWristSpeed": 5.247756004333496,
+            "frames": 485
+        },
+        {
+            "action": "DRINK",
+            "role": "俠客",
+            "seconds": 10.866666793823243,
+            "peakDegreesPerSecond": 708.4105834960938,
+            "p95DegreesPerSecond": 247.75149536132813,
+            "peakAcceleration": 16771.8671875,
+            "entryPeak": 708.4105834960938,
+            "actionPeak": 444.2404479980469,
+            "releasePeak": 247.75149536132813,
+            "peakWristSpeed": 5.394094467163086,
+            "frames": 653
+        },
+        {
+            "action": "DRINK",
+            "role": "琴師",
+            "seconds": 10.866666793823243,
+            "peakDegreesPerSecond": 846.5025634765625,
+            "p95DegreesPerSecond": 268.423095703125,
+            "peakAcceleration": 15696.0126953125,
+            "entryPeak": 846.5025634765625,
+            "actionPeak": 379.6688232421875,
+            "releasePeak": 436.4090576171875,
+            "peakWristSpeed": 5.288503170013428,
+            "frames": 653
+        },
+        {
+            "action": "ALERT",
+            "role": "俠客",
+            "seconds": 8.350000381469727,
+            "peakDegreesPerSecond": 571.7181396484375,
+            "p95DegreesPerSecond": 141.641845703125,
+            "peakAcceleration": 9677.90234375,
+            "entryPeak": 571.7181396484375,
+            "actionPeak": 142.01934814453126,
+            "releasePeak": 245.87887573242188,
+            "peakWristSpeed": 2.7895395755767824,
+            "frames": 502
+        },
+        {
+            "action": "ALERT",
+            "role": "琴師",
+            "seconds": 8.350000381469727,
+            "peakDegreesPerSecond": 846.5025634765625,
+            "p95DegreesPerSecond": 373.01708984375,
+            "peakAcceleration": 19988.20703125,
+            "entryPeak": 846.5025634765625,
+            "actionPeak": 349.5386657714844,
+            "releasePeak": 436.4090576171875,
+            "peakWristSpeed": 5.408707141876221,
+            "frames": 502
+        },
+        {
+            "action": "ATTACK",
+            "role": "俠客",
+            "seconds": 10.716667175292969,
+            "peakDegreesPerSecond": 651.5875854492188,
+            "p95DegreesPerSecond": 239.85638427734376,
+            "peakAcceleration": 11472.185546875,
+            "entryPeak": 651.5875854492188,
+            "actionPeak": 494.2044372558594,
+            "releasePeak": 248.87510681152345,
+            "peakWristSpeed": 3.1266469955444338,
+            "frames": 644
+        },
+        {
+            "action": "ATTACK",
+            "role": "琴師",
+            "seconds": 10.716667175292969,
+            "peakDegreesPerSecond": 846.5025634765625,
+            "p95DegreesPerSecond": 600.3883666992188,
+            "peakAcceleration": 37178.4765625,
+            "entryPeak": 846.5025634765625,
+            "actionPeak": 782.6693725585938,
+            "releasePeak": 436.4090576171875,
+            "peakWristSpeed": 5.139671325683594,
+            "frames": 644
+        }
+    ],
+    "engineDiagnostics": [
+        "ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.\r\nParameter name: index\nSystem.Collections.Generic.List`1[T].get_Item (System.Int32 index) (at <816f70bc2a9c4332b0bd119906a8d40e>:0)\nUnityEditor.Search.SearchDatabase+<EnumerateAll>d__75.MoveNext () (at <ba40de9d2c774406a299ab488f9e8db6>:0)\nSystem.Linq.Enumerable.TryGetFirst[TSource] (System.Collections.Generic.IEnumerable`1[T] source, System.Boolean& found) (at <fe644d7ad1cf499ebe4e7ad937bc03bf>:0)\nSystem.Linq.Enumerable.First[TSource] (System.Collections.Generic.IEnumerable`1[T] source) (at <fe644d7ad1cf499ebe4e7ad937bc03bf>:0)\nUnityEditor.Search.SearchDatabase.GetDefaultSearchDatabase () (at <ba40de9d2c774406a299ab488f9e8db6>:0)\nUnityEditor.Search.SearchInit.IndexationOnStartup () (at <ba40de9d2c774406a299ab488f9e8db6>:0)\nUnityEditor.EditorApplication.Internal_CallDelayFunctions () (at <2608e8670e87477ba4f8f33d8e275d95>:0)\n"
+    ]
+}

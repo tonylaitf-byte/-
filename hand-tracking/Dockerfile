@@ -12,7 +12,7 @@ RUN apt-get update \
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY lapf.py puppet_controls.py gesture_recognizer.py duet_tracking.py duet_mapping_tracking.py docker_app.py performance_session.py ./
+COPY lapf.py puppet_controls.py gesture_recognizer.py duet_tracking.py duet_mapping_tracking.py docker_app.py performance_session.py hand_identity.py api_input.py ./
 COPY templates ./templates
 COPY static ./static
 

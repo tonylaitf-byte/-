@@ -1,8 +1,8 @@
 {
   "passed": true,
   "addedResponseDelayMs": 350,
-  "previewFps": 19.955598792656605,
-  "inferenceFps": 2.245004864173868,
+  "previewFps": 20.065055646260536,
+  "inferenceFps": 2.118670471965398,
   "maxFramesInFlight": 1,
   "mjpegRequests": 0,
   "overlay": true,
