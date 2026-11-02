@@ -1,0 +1,9 @@
+Independent preview scene: Assets/IntegratedTheatre/Scenes/CourtyardLayoutPreview.unity
+Side houses: 5.3 units inward each
+Central architecture width: 1.45x
+Existing rear lanterns: 3.5 units inward each
+Separate backdrop material reframes moonlight
+Table: 2.15 x 1.30, top height 0.375
+Main mat: 4.25 x 1.80
+Two sitting mats: 0.75 x 1.25
+Original scenes and WebGL unchanged.

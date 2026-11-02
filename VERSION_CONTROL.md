@@ -8,6 +8,7 @@
 - 目前狀態：已推送獨立分支，並建立 [Pull Request #1](https://github.com/tonylaitf-byte/-/pull/1) 供組員審查；尚未合併至 main。
 - 程式／測試：`6d8d629`（feat: add hybrid puppetry and tracking stability safeguards）。
 - WebGL 成品：`af94ff7`（build: update WebGL player for stable hybrid handoff）。
+- 2026-11-02 新增庭院酒席與持劍戲偶材質預覽，推送至同一 PR 分支；版本編號以 Git 紀錄為準。這批預覽尚未替換上述正式 WebGL。
 - 修改內容與已知限制：見 [CHANGELOG.md](CHANGELOG.md)。
 - 2026-10-25 已執行 `git fetch origin --prune`；當時本機與遠端 main 同為基準版本。
 - 本機提交不代表 GitHub 已更新。推送及合併前應再次確認遠端狀態。
