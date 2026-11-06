@@ -1,0 +1,40 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "fps": 15,
+      "previousSeconds": 2.933333333333333,
+      "hybridSeconds": 0.7333333333333333
+    },
+    {
+      "fps": 16,
+      "previousSeconds": 2.75,
+      "hybridSeconds": 0.6875
+    },
+    {
+      "fps": 20,
+      "previousSeconds": 2.2,
+      "hybridSeconds": 0.6
+    },
+    {
+      "fps": 30,
+      "previousSeconds": 1.4666666666666666,
+      "hybridSeconds": 0.6
+    },
+    {
+      "fps": 60,
+      "previousSeconds": 1.4666666666666666,
+      "hybridSeconds": 0.6
+    },
+    {
+      "fps": 120,
+      "previousSeconds": 1.4666666666666666,
+      "hybridSeconds": 0.6
+    },
+    {
+      "fps": 240,
+      "previousSeconds": 1.4666666666666666,
+      "hybridSeconds": 0.6
+    }
+  ]
+}

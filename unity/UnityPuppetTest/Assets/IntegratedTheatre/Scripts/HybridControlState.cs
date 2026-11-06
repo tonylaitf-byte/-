@@ -54,12 +54,12 @@ namespace PalmTheatre.Integration
     [Serializable]
     public sealed class HybridActorStatus
     {
-        public string role, action, mask, phase, error;
+        public string role, action, mask, phase, error, idleClip;
         public int ownerId, inputEpoch, actionSequence, startedActionSequence, startedCount, droppedCount;
         public bool ownerHeld, handDetected, calibrated, actionActive, voiceWaiting;
         public bool jugVisible;
         public Vector3 swordLocalPosition;
-        public float blendWeight;
+        public float blendWeight, idleWeight, idleTime;
         public HybridPoseStatus mappingPose;
     }
 

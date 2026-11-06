@@ -6,6 +6,7 @@
   const config = {players: query.get('players') === '2' ? 2 : 1, mode: ['mapping', 'hybrid'].includes(requestedMode) ? requestedMode : 'gesture'};
   const duet = config.players === 2, hybrid = config.mode === 'hybrid', mapping = config.mode !== 'gesture';
   const video = $('preview'), overlay = $('hand-overlay'), overlayContext = overlay.getContext('2d');
+  video.classList.toggle('mirrored', duet);
   let unity = null, session = null, stream = null, ready = false, paused = false, leaving = false;
   let generation = 0, cameraGeneration = 0, cameraStarting = false, sending = false, sequence = 0, lastCapture = 0;
   let readyWaiter = null, latestStatus = null, requestError = false;
@@ -34,7 +35,7 @@
   if (mapping) {
     help.innerHTML = '<p>拇指 → 左臂<br>小指 → 右臂<br>中指 → 頭部<br>移動、轉動手掌 → 身體</p>';
     const detail = document.createElement('p');
-    detail.textContent = hybrid ? '先穩定保持自然姿勢約 0.6 秒完成快速校正；接著五指自然張開 0.2 秒，等待「已就緒」，再維持指定手勢 0.5 秒。每次觸發後須回到自然手勢；相同動作冷卻 3 秒。' : '將手放在舒適位置，保持自然姿勢約 1.5 秒，等待校正完成。映射模式以即時操偶為主，不自動播放整段台詞。';
+    detail.textContent = hybrid ? '先穩定保持自然姿勢約 0.6 秒完成快速校正；接著五指自然張開 0.2 秒，等待「已就緒」，再維持指定手勢 0.5 秒。每次觸發後須回到自然手勢；相同動作冷卻 3 秒。' : '將手放在舒適位置，保持自然姿勢約 0.6 秒，等待快速校正完成。映射模式以即時操偶為主，不自動播放整段台詞。';
     help.append(detail);
   }
   if (!mapping || hybrid) {
@@ -236,7 +237,7 @@
       stream.getVideoTracks().forEach(track => track.addEventListener('ended', () => { if (current === cameraGeneration) { stopCamera(); feedback('攝影機已中斷，請重新開啟。', true); } }));
       $('camera-empty').hidden = true; $('camera-button').textContent = '停止鏡頭'; $('camera-status').textContent = '鏡頭已開啟';
       $('camera-metrics').textContent = '正在測量幀率…';
-      feedback(hybrid ? '鏡頭已啟動，請穩定保持自然姿勢約 0.6 秒，等待快速校正完成。' : mapping ? '鏡頭已啟動，請保持自然姿勢約 1.5 秒。' : '鏡頭已啟動，將手勢穩定維持 0.5 秒。');
+      feedback(mapping ? '鏡頭已啟動，請穩定保持自然姿勢約 0.6 秒，等待快速校正完成。' : '鏡頭已啟動，將手勢穩定維持 0.5 秒。');
       scheduleCapture(current);
     } catch (error) {
       if (current !== cameraGeneration) return;
@@ -357,7 +358,7 @@
       session.calibrationRevision = result.calibrationRevision;
       inputPending = false;
       applyState(result);
-      feedback(hybrid ? '請穩定保持自然姿勢約 0.6 秒，等待快速校正完成。' : '請保持自然姿勢穩定，等待重新校正完成。');
+      feedback('請穩定保持自然姿勢約 0.6 秒，等待快速校正完成。');
     }
     catch (error) {
       if (current !== generation || leaving) return;

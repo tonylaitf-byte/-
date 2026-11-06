@@ -14,6 +14,7 @@ from duet_tracking import DuetHandRouter
 from duet_mapping_tracking import DuetMappingRouter
 from hand_identity import StableHandedness
 from api_input import install_json_errors, json_object
+from puppet_controls import FAST_CALIBRATION_SAMPLES, FAST_CALIBRATION_SECONDS
 
 
 app = Flask(__name__)
@@ -169,10 +170,11 @@ def process_browser_frame(frame, render_preview=True):
         error,
     )
 
-    # Match the mirrored controller view used by the original native-camera app.
-    frame = cv2.flip(frame, 1)
-    frame_size = (frame.shape[1], frame.shape[0])
     mode = get_control_mode()
+    # Solo uses the camera's original direction; duet retains mirrored zones.
+    if mode in ("duet", "duet_mapping", "duet_hybrid"):
+        frame = cv2.flip(frame, 1)
+    frame_size = (frame.shape[1], frame.shape[0])
     global duet_hands
     if mode in ("duet", "duet_mapping", "duet_hybrid") and duet_hands is None:
         duet_hands = core.mp_hands.Hands(
@@ -546,7 +548,9 @@ def set_control_mode():
                 return {"status": "ok", "mode": mode}
             control_mode = mode
         with core.pipeline_lock:
-            core.pipeline.configure_calibration()
+            core.pipeline.configure_calibration(
+                FAST_CALIBRATION_SAMPLES if mode == 'mapping' else 45,
+                FAST_CALIBRATION_SECONDS if mode == 'mapping' else None)
         gesture_recognizer.reset()
         reset_solo_hybrid()
         gesture_movement.reset()

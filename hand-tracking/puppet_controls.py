@@ -310,8 +310,8 @@ def controls_from_landmarks(landmarks, frame_size=None):
     }
 
 
-HYBRID_CALIBRATION_SAMPLES = 12
-HYBRID_CALIBRATION_SECONDS = 0.6
+FAST_CALIBRATION_SAMPLES = 12
+FAST_CALIBRATION_SECONDS = 0.6
 
 
 class NeutralPoseCalibrator:

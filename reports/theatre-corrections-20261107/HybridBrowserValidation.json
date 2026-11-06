@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "players": 1,
+      "scene": "SoloHybrid",
+      "mappingDuringAction": true,
+      "eventDedup": true,
+      "busyDrop": true,
+      "newestTargetAfterAction": true,
+      "ownerIsolation": true,
+      "pause": true,
+      "reset": true
+    },
+    {
+      "players": 2,
+      "scene": "DuetHybrid",
+      "mappingDuringAction": true,
+      "eventDedup": true,
+      "busyDrop": true,
+      "newestTargetAfterAction": true,
+      "ownerIsolation": true,
+      "pause": true,
+      "reset": true
+    }
+  ],
+  "errors": []
+}

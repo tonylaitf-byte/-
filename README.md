@@ -6,6 +6,8 @@
 
 2026-11-07：混合模式首次校正已縮短；第 5 手勢改用拇指＋食指伸出，其餘三指收起。一般手勢模式維持原五指張開，詳見 [HYBRID_QUICK_START.md](HYBRID_QUICK_START.md)。
 
+同日後續修正：混合模式等待辨識時接入新版放鬆待機，所有單人模式反轉鏡頭方向，映射模式也採用快速校正。詳見 [THEATRE_CORRECTIONS_20261107.md](THEATRE_CORRECTIONS_20261107.md)。
+
 ## 啟動
 
 最新修改與驗證範圍見 [CHANGELOG.md](CHANGELOG.md)，組員分支與回退方式見 [VERSION_CONTROL.md](VERSION_CONTROL.md)。

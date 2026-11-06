@@ -4,7 +4,7 @@ import secrets
 import time
 from flask import jsonify, request
 from api_input import json_object
-from puppet_controls import HYBRID_CALIBRATION_SAMPLES, HYBRID_CALIBRATION_SECONDS
+from puppet_controls import FAST_CALIBRATION_SAMPLES, FAST_CALIBRATION_SECONDS
 
 
 def install(service):
@@ -51,8 +51,8 @@ def install(service):
             service.duet_mapping_router.set_hybrid(backend_mode == 'duet_hybrid')
             with service.core.pipeline_lock:
                 service.core.pipeline.configure_calibration(
-                    HYBRID_CALIBRATION_SAMPLES if backend_mode == 'hybrid' else 45,
-                    HYBRID_CALIBRATION_SECONDS if backend_mode == 'hybrid' else None)
+                    FAST_CALIBRATION_SAMPLES if mode in ('mapping', 'hybrid') else 45,
+                    FAST_CALIBRATION_SECONDS if mode in ('mapping', 'hybrid') else None)
             reset_input()
             service.performance = {'sessionId': secrets.token_urlsafe(24), 'players': players,
                                    'mode': mode, 'controlMode': backend_mode, 'calibrationRevision': 0, 'cameraGeneration': 0}

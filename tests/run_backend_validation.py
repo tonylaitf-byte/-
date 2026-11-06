@@ -12,6 +12,7 @@ suite = unittest.TestSuite([
     loader.loadTestsFromName('test_performance_session'),
     loader.loadTestsFromName('test_hybrid_mode'),
     loader.loadTestsFromName('test_hybrid_quick_start'),
+    loader.loadTestsFromName('test_camera_direction'),
     loader.loadTestsFromName('test_coordinate_aspect'),
     loader.loadTestsFromName('test_tracking_stability'),
     loader.loadTestsFromName('test_api_input'),

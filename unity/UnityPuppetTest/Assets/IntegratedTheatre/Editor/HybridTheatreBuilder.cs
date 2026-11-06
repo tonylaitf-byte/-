@@ -91,6 +91,9 @@ public static class HybridTheatreBuilder
         actor.role = role;
         actor.animator = animator;
         actor.musician = music;
+        actor.idleClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(music ?
+            "Assets/YueXian/ActionTest/Animations/MusicIdle.anim" : "Assets/Animations/Idle.anim");
+        if (!actor.idleClip) throw new InvalidOperationException("Hybrid relaxed idle is missing.");
         actor.minimumX = minimumX;
         actor.maximumX = maximumX;
         var mapping = root.GetComponent<PuppetBoneTest>();

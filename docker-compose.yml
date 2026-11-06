@@ -4,7 +4,7 @@ services:
   hand-tracking:
     build:
       context: ./hand-tracking
-    image: palm-theatre-integration:20261107-hybrid-fast
+    image: palm-theatre-integration:20261107-idle-camera
     container_name: unity-puppet-hand-tracking
     ports:
       - "127.0.0.1:5000:5000"
@@ -12,5 +12,5 @@ services:
     environment:
       HAND_MODEL_COMPLEXITY: "1"
       BROWSER_FRAME_TIMEOUT: "0.8"
-      THEATRE_RELEASE: "2026-11-07-hybrid-fast"
+      THEATRE_RELEASE: "2026-11-07-idle-camera"
     restart: unless-stopped

@@ -5,7 +5,7 @@ import time
 from duet_tracking import DuetHandRouter
 from gesture_recognizer import GestureActionRecognizer, HybridGestureActionRecognizer
 from puppet_controls import (PuppetControlPipeline, CONTROL_DEFAULTS, make_puppet_payload, clamp,
-                             HYBRID_CALIBRATION_SAMPLES, HYBRID_CALIBRATION_SECONDS)
+                             FAST_CALIBRATION_SAMPLES, FAST_CALIBRATION_SECONDS)
 
 
 class DuetMappingRouter:
@@ -37,10 +37,10 @@ class DuetMappingRouter:
             self.state=None
 
     def _new_pipeline(self):
-        quick = self.hybrid and self.samples is None
-        samples = self.samples if self.samples is not None else HYBRID_CALIBRATION_SAMPLES if quick else 45
+        quick = self.samples is None
+        samples = self.samples if self.samples is not None else FAST_CALIBRATION_SAMPLES
         return PuppetControlPipeline(calibration_samples=samples,
-            calibration_seconds=HYBRID_CALIBRATION_SECONDS if quick else None)
+            calibration_seconds=FAST_CALIBRATION_SECONDS if quick else None)
 
     def snapshot(self):
         with self.lock:

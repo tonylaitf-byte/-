@@ -16,6 +16,8 @@ namespace PalmTheatre.Integration
         public MusicianActionManager musician;
         public HybridBone[] bones;
         public HybridAction[] actions;
+        public AnimationClip idleClip;
+        public float idleBlendSeconds = .35f;
         public GameObject instrument;
         public bool showInstrument;
         public float minimumX, maximumX, maximumDepth = .2f;
@@ -40,7 +42,8 @@ namespace PalmTheatre.Integration
         readonly Dictionary<string, float> nextAllowed = new Dictionary<string, float>();
         HybridAction active;
         PuppetControlState input;
-        Quaternion[] animated, entryPose, releasePose, visiblePose, loopPose;
+        Quaternion[] animated, entryPose, releasePose, visiblePose, loopPose, mappingPose;
+        float idleTime, idleWeight = 1;
         Vector3[] animatedAttachments, entryAttachments, releaseAttachments;
         bool[] restActive, animatedActive;
         Vector3[] visibleVelocity, releaseVelocity;
@@ -75,7 +78,7 @@ namespace PalmTheatre.Integration
         {
             if (initialized) return string.IsNullOrEmpty(Error);
             initialized = true;
-            if (!mapping || !animator || bones == null || bones.Length == 0 || actions == null)
+            if (!mapping || !animator || !idleClip || bones == null || bones.Length == 0 || actions == null)
             {
                 Error = "Hybrid actor has incomplete rig bindings.";
                 return false;
@@ -91,6 +94,7 @@ namespace PalmTheatre.Integration
             releasePose = new Quaternion[bones.Length];
             visiblePose = new Quaternion[bones.Length];
             loopPose = new Quaternion[bones.Length];
+            mappingPose = new Quaternion[bones.Length];
             visibleVelocity = new Vector3[bones.Length];
             releaseVelocity = new Vector3[bones.Length];
             entrySettling = new bool[bones.Length];
@@ -116,6 +120,7 @@ namespace PalmTheatre.Integration
             output = AnimationPlayableOutput.Create(graph, role, animator);
             graph.Play();
             RestoreRestPose();
+            ApplyIdlePose(0);
             Capture(visiblePose);
             composeBody = () => Compose(true);
             ApplyInstrumentVisibility();
@@ -303,6 +308,7 @@ namespace PalmTheatre.Integration
             position.y = grounded.y;
             position.z = Mathf.Clamp(position.z, grounded.z - maximumDepth, grounded.z + maximumDepth);
             transform.localPosition = position;
+            ApplyIdlePose(deltaTime);
             CaptureVisible(deltaTime);
             if (releasing)
             {
@@ -316,6 +322,20 @@ namespace PalmTheatre.Integration
                 releasing = false;
                 ApplyInstrumentVisibility();
             }
+        }
+
+        void ApplyIdlePose(float deltaTime)
+        {
+            idleTime += deltaTime;
+            if (active != null) { idleWeight = 0; return; }
+            bool waiting = !ownerHeld || input == null || !input.handDetected || !input.calibrated;
+            idleWeight = Mathf.MoveTowards(idleWeight, waiting ? 1 : 0,
+                deltaTime / Mathf.Max(.08f, idleBlendSeconds));
+            if (idleWeight <= 0) return;
+            Capture(mappingPose);
+            idleClip.SampleAnimation(animator.gameObject, idleTime % idleClip.length);
+            for (int i = 0; i < bones.Length; i++)
+                bones[i].bone.localRotation = Quaternion.Slerp(mappingPose[i], bones[i].bone.localRotation, idleWeight);
         }
 
         void Compose(bool body)
@@ -426,7 +446,8 @@ namespace PalmTheatre.Integration
                 mask = active?.mask.ToString() ?? "None", error = Error,
                 jugVisible = jugAttachment && jugAttachment.gameObject.activeSelf,
                 swordLocalPosition = swordAttachment ? swordAttachment.localPosition : Vector3.zero,
-                phase = releasing ? "Release" : active == null ? "Mapping" : "Action",
+                phase = releasing ? "Release" : active != null ? "Action" : idleWeight > .001f ? "Idle" : "Mapping",
+                idleClip = idleClip ? idleClip.name : "", idleWeight = idleWeight, idleTime = idleTime,
                 blendWeight = active == null ? 0 : releasing ?
                     1 - HybridMotionTiming.Ease(releaseElapsed / exitDuration) :
                     HybridMotionTiming.Ease(Elapsed / entryDuration),

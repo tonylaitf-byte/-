@@ -10,7 +10,7 @@ from duet_tracking import palm_center
 from gesture_recognizer import (HybridGestureActionRecognizer,
                                 classify_counting_gesture, classify_hybrid_gesture)
 from puppet_controls import (CONTROL_DEFAULTS, NeutralPoseCalibrator,
-                             HYBRID_CALIBRATION_SAMPLES, HYBRID_CALIBRATION_SECONDS)
+                             FAST_CALIBRATION_SAMPLES, FAST_CALIBRATION_SECONDS)
 from test_gesture_recognizer import hand
 
 OPEN = {'thumb', 'index', 'middle', 'ring', 'pinky'}
@@ -55,7 +55,7 @@ class HybridCalibrationTests(unittest.TestCase):
         for fps in (15,16,20,30,60,120,240):
             durations=[]
             for calibrator in (NeutralPoseCalibrator(),
-                    NeutralPoseCalibrator(HYBRID_CALIBRATION_SAMPLES, HYBRID_CALIBRATION_SECONDS)):
+                    NeutralPoseCalibrator(FAST_CALIBRATION_SAMPLES, FAST_CALIBRATION_SECONDS)):
                 for frame in range(fps*4):
                     now=frame/fps
                     calibrator.observe(CONTROL_DEFAULTS, now)
@@ -83,27 +83,25 @@ class HybridCalibrationTests(unittest.TestCase):
         calibrator.observe(CONTROL_DEFAULTS,6.6)
         self.assertTrue(calibrator.calibrated)
 
-    def test_solo_and_duet_profiles_survive_resets_and_restore_mapping(self):
+    def test_solo_and_duet_mapping_and_hybrid_profiles_survive_resets(self):
         client=service.app.test_client()
         try:
-            for players in (1,2):
-                session=client.post('/performance/start',json={'players':players,'mode':'hybrid'}).get_json()
-                headers={'X-Performance-Session':session['sessionId']}
-                def pipelines():
-                    return [service.core.pipeline] if players==1 else list(service.duet_mapping_router.pipelines.values())
-                for operation in ('start','calibrate','camera'):
-                    if operation=='calibrate':client.post('/performance/calibrate',headers=headers,json={})
-                    if operation=='camera':client.post('/performance/input-stop',headers=headers,json={})
-                    for pipe in pipelines():
-                        self.assertEqual(pipe.calibrator.samples_required,12)
-                        self.assertAlmostEqual(pipe.calibrator.minimum_seconds,.6)
-                client.post('/performance/start',json={'players':players,'mode':'mapping'})
-                for pipe in pipelines():
-                    self.assertEqual(pipe.calibrator.samples_required,45)
+            for mode in ('mapping','hybrid'):
+                for players in (1,2):
+                    session=client.post('/performance/start',json={'players':players,'mode':mode}).get_json()
+                    headers={'X-Performance-Session':session['sessionId']}
+                    def pipelines():
+                        return [service.core.pipeline] if players==1 else list(service.duet_mapping_router.pipelines.values())
+                    for operation in ('start','calibrate','camera'):
+                        if operation=='calibrate':client.post('/performance/calibrate',headers=headers,json={})
+                        if operation=='camera':client.post('/performance/input-stop',headers=headers,json={})
+                        for pipe in pipelines():
+                            self.assertEqual(pipe.calibrator.samples_required,12)
+                            self.assertAlmostEqual(pipe.calibrator.minimum_seconds,.6)
             session=client.post('/performance/start',json={'players':1,'mode':'hybrid'}).get_json()
             client.post('/performance/stop',json={'sessionId':session['sessionId']})
             client.post('/control_mode',json={'mode':'mapping'})
-            self.assertEqual(service.core.pipeline.calibrator.samples_required,45)
+            self.assertEqual(service.core.pipeline.calibrator.samples_required,12)
         finally:
             if service.performance:client.post('/performance/stop',json={'sessionId':service.performance['sessionId']})
 
@@ -122,6 +120,17 @@ class HybridCalibrationTests(unittest.TestCase):
                 self.assertEqual(state['left']['controls']['actionSequence'],0)
         for side in ('left','right'):
             self.assertEqual((state[side]['controls']['action'],state[side]['controls']['actionSequence']),('ATTACK',1))
+
+    def test_mapping_owners_use_fast_window_after_initial_assignment(self):
+        from test_duet_mapping import observation
+        router = DuetMappingRouter()
+        for frame in range(17):
+            state = router.update([observation(.2), observation(.8)], frame / 20)
+        for side in ('left', 'right'):
+            self.assertTrue(state[side]['controls']['calibrated'])
+            self.assertEqual(router.pipelines[side].calibrator.samples_required, 12)
+        router.reset()
+        self.assertTrue(all(p.calibrator.minimum_seconds == .6 for p in router.pipelines.values()))
 
 
 if __name__=='__main__':unittest.main()

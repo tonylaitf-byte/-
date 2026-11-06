@@ -44,6 +44,14 @@ fs.mkdirSync(output, {recursive:true});
       await page.waitForFunction(()=>window.__theatreStatus?.ready,null,{timeout:120000});
       await page.waitForFunction(()=>document.getElementById('camera-status').textContent==='鏡頭已開啟');
       const initial=await state();
+      assert.equal(await page.locator('#preview').evaluate(video => getComputedStyle(video).transform),
+        players === 1 ? 'none' : 'matrix(-1, 0, 0, 1, 0, 0)');
+      assert.equal(initial.leftHybrid.idleClip, 'Idle');
+      assert.equal(initial.leftHybrid.phase, 'Idle');
+      if (players === 2) {
+        assert.equal(initial.rightHybrid.idleClip, 'MusicIdle');
+        assert.equal(initial.rightHybrid.phase, 'Idle');
+      }
       assert.equal(initial.mode,'hybrid');
       assert.equal(initial.scene,players===1?'SoloHybrid':'DuetHybrid');
       assert.equal(initial.actors,players);
