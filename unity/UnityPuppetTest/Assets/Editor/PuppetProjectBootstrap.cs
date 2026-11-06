@@ -256,20 +256,7 @@ public static class PuppetProjectBootstrap
 
     private static AnimationClip CreateIdleClip(Transform root, Dictionary<string, Transform> bones)
     {
-        AnimationClip clip = NewClip("Idle", true);
-        SetRotationCurve(clip, root, bones["Spine"], new[]
-        {
-            Pose(0f, Vector3.zero),
-            Pose(1f, new Vector3(0f, 0f, 1.5f)),
-            Pose(2f, Vector3.zero)
-        });
-        SetRotationCurve(clip, root, bones["Head"], new[]
-        {
-            Pose(0f, Vector3.zero),
-            Pose(1f, new Vector3(1.5f, -1f, 0f)),
-            Pose(2f, Vector3.zero)
-        });
-        return SaveClip(clip, "Assets/Animations/Idle.anim");
+        return RelaxedIdleAuthor.CreateWarriorIdle(root);
     }
 
     private static AnimationClip CreateDrinkClip(Transform root, Dictionary<string, Transform> bones)
@@ -357,45 +344,7 @@ public static class PuppetProjectBootstrap
 
     private static AnimationClip CreateAttackClip(Transform root, Dictionary<string, Transform> bones)
     {
-        const float duration = 3.0f;
-        AnimationClip clip = NewClip("Attack", false);
-        SetRotationCurve(clip, root, bones["Spine"], new[]
-        {
-            Pose(0f, Vector3.zero),
-            Pose(0.38f, new Vector3(0f, -28f, 0f)),
-            Pose(0.82f, new Vector3(0f, 38f, -5f)),
-            Pose(1.18f, new Vector3(0f, 24f, -4f)),
-            Pose(1.55f, new Vector3(0f, -24f, 0f)),
-            Pose(1.95f, new Vector3(0f, 34f, -5f)),
-            Pose(2.35f, new Vector3(0f, 16f, -3f)),
-            Pose(2.68f, new Vector3(0f, 6f, -1f)),
-            Pose(duration, Vector3.zero)
-        });
-        SetRotationCurve(clip, root, bones["RightArm"], new[]
-        {
-            Pose(0f, Vector3.zero),
-            Pose(0.38f, new Vector3(-25f, -55f, -55f)),
-            Pose(0.82f, new Vector3(18f, 60f, 28f)),
-            Pose(1.18f, new Vector3(-18f, 46f, 22f)),
-            Pose(1.55f, new Vector3(12f, -44f, -38f)),
-            Pose(1.95f, new Vector3(-30f, 52f, 24f)),
-            Pose(2.35f, new Vector3(24f, 30f, 18f)),
-            Pose(2.68f, new Vector3(-10f, 12f, -8f)),
-            Pose(duration, Vector3.zero)
-        });
-        SetRotationCurve(clip, root, bones["RightForeArm"], new[]
-        {
-            Pose(0f, Vector3.zero),
-            Pose(0.38f, new Vector3(0f, 0f, -8f)),
-            Pose(0.82f, new Vector3(-10f, 0f, 10f)),
-            Pose(1.18f, new Vector3(-20f, 0f, 12f)),
-            Pose(1.55f, new Vector3(8f, 0f, -8f)),
-            Pose(1.95f, new Vector3(-20f, 0f, 10f)),
-            Pose(2.35f, new Vector3(12f, 0f, 5f)),
-            Pose(2.68f, new Vector3(-5f, 0f, 0f)),
-            Pose(duration, Vector3.zero)
-        });
-        return SaveClip(clip, "Assets/Animations/Attack.anim");
+        return SwordDanceAuthor.CreateAttackClip(root, bones);
     }
 
     private static AnimationClip CreateBowClip(Transform root, Dictionary<string, Transform> bones)

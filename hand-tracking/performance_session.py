@@ -50,7 +50,7 @@ def install(service):
             service.duet_mapping_router.set_hybrid(backend_mode == 'duet_hybrid')
             reset_input()
             service.performance = {'sessionId': secrets.token_urlsafe(24), 'players': players,
-                                   'mode': mode, 'controlMode': backend_mode, 'calibrationRevision': 0}
+                                   'mode': mode, 'controlMode': backend_mode, 'calibrationRevision': 0, 'cameraGeneration': 0}
             return jsonify(service.performance)
 
     def snapshot():
@@ -91,8 +91,14 @@ def install(service):
         with service.inference_lock:
             if not owns_session():
                 return {'error': '演出已結束。'}, 409
+            payload = json_object(allow_empty=True)
+            if 'cameraGeneration' in payload and (type(payload['cameraGeneration']) is not int or payload['cameraGeneration'] < 0):
+                return {'error': 'cameraGeneration must be a non-negative integer'}, 400
+            if 'cameraGeneration' in payload and payload['cameraGeneration'] != service.performance['cameraGeneration']:
+                return {'error': '鏡頭已切換，已忽略舊的停止要求。'}, 410
             reset_input()
-            return {'status': 'camera-off'}
+            service.performance['cameraGeneration'] += 1
+            return {'status': 'camera-off', 'cameraGeneration': service.performance['cameraGeneration']}
 
     @app.post('/performance/pause')
     def pause():

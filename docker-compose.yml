@@ -4,11 +4,13 @@ services:
   hand-tracking:
     build:
       context: ./hand-tracking
-    image: unity-puppet-hand-tracking:1.0
+    image: palm-theatre-integration:20261106
     container_name: unity-puppet-hand-tracking
     ports:
       - "127.0.0.1:5000:5000"
+      - "127.0.0.1:5052:5000"
     environment:
       HAND_MODEL_COMPLEXITY: "1"
       BROWSER_FRAME_TIMEOUT: "0.8"
+      THEATRE_RELEASE: "2026-11-06-integrated"
     restart: unless-stopped

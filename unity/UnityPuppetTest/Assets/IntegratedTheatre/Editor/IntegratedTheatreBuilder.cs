@@ -25,6 +25,7 @@ public static class IntegratedTheatreBuilder
             if (!File.Exists(Scenes[i]))
                 throw new FileNotFoundException("Existing integrated scene is missing.", Scenes[i]);
         HybridTheatreBuilder.Prepare();
+        IntegratedStageAssets.Prepare();
         AssetDatabase.SaveAssets();
         Debug.Log("INTEGRATED_THEATRE_PREPARE_PASS");
     }
@@ -36,6 +37,7 @@ public static class IntegratedTheatreBuilder
             if (!File.Exists(Scenes[i]))
                 throw new FileNotFoundException("Existing integrated scene is missing. Run IntegratedTheatreBuilder.Prepare explicitly first.", Scenes[i]);
         HybridTheatreBuilder.Prepare();
+        IntegratedStageAssets.Prepare();
         AssetDatabase.SaveAssets();
         string output = Environment.GetEnvironmentVariable("THEATRE_BUILD_OUTPUT");
         if (string.IsNullOrEmpty(output)) {

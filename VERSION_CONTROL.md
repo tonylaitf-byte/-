@@ -1,5 +1,7 @@
 # 共編與版本控制
 
+2026-11-06 本機整合：來源為 `origin/codex/hybrid-stability-20261025` 的 `d36fd98`，整合工作保存在本機 `integration/20261106`。本次不會替組員的 GitHub 分支改寫歷史；遠端推送與 PR 合併須以實際 Git 紀錄為準。詳細來源見 [INTEGRATION_20261106.md](INTEGRATION_20261106.md)。
+
 ## 本次版本
 
 - 儲存庫：https://github.com/tonylaitf-byte/-

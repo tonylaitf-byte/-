@@ -48,6 +48,8 @@ fs.mkdirSync(output, {recursive:true});
       assert.equal(initial.scene,players===1?'SoloHybrid':'DuetHybrid');
       assert.equal(initial.actors,players);
       assert.equal(initial.error,'');
+      assert.equal(initial.audioListeners,1);
+      assert.ok(initial.banquetRenderers>=28);
       assert.equal(await page.locator('.calibrate').count(),players);
       injected=envelope(players,control(),control({bodyX:-.3}));
       await page.waitForFunction(()=>window.__theatreStatus?.leftHybrid?.calibrated && window.__theatreStatus.leftHybrid.inputEpoch===10000);
@@ -57,13 +59,15 @@ fs.mkdirSync(output, {recursive:true});
       injected=envelope(players,control({action:'ATTACK',actionSequence:1,gesture:5,gestureHold:1,gestureArmed:false}));
       await page.waitForFunction(()=>window.__theatreStatus?.leftHybrid?.actionActive && window.__theatreStatus.leftHybrid.startedCount===1);
       const during=await state();
-      const handBefore=during.leftHybrid.mappingPose.leftHand;
-      injected=envelope(players,control({leftHandY:.9,action:'ATTACK',actionSequence:1,gesture:5,gestureHold:1,gestureArmed:false}));
+      const rootBefore=during.leftX;
+      assert.equal(during.leftHybrid.mask,'UpperBody');
+      await page.waitForFunction(()=>window.__theatreStatus?.audioPlaying && window.__theatreStatus.leftHybrid.jugVisible===false);
+      injected=envelope(players,control({bodyX:-.6,leftHandY:.9,action:'ATTACK',actionSequence:1,gesture:5,gestureHold:1,gestureArmed:false}));
       await page.waitForFunction(()=>window.__theatreStatus?.leftHybrid?.mappingPose?.inputLeftHandY>.85);
       await page.waitForFunction(before=>{
-        const s=window.__theatreStatus?.leftHybrid, p=s?.mappingPose?.leftHand;
-        return s?.actionActive && p && Math.hypot(p.x-before.x,p.y-before.y,p.z-before.z)>.02;
-      },handBefore);
+        const s=window.__theatreStatus;
+        return s?.leftHybrid?.actionActive && Math.abs(s.leftX-before)>.02;
+      },rootBefore);
       assert.equal((await state()).leftHybrid.startedCount,1,'Repeated event sequence must not restart an action.');
 
       // Busy gestures are consumed once; they must never play later from a stale queue.
@@ -71,6 +75,7 @@ fs.mkdirSync(output, {recursive:true});
       await page.waitForFunction(()=>window.__theatreStatus?.leftHybrid?.droppedCount===1);
       await page.waitForFunction(()=>window.__theatreStatus?.leftHybrid && !window.__theatreStatus.leftHybrid.actionActive,null,{timeout:45000});
       assert.equal((await state()).leftHybrid.startedCount,1);
+      assert.equal((await state()).leftHybrid.jugVisible,true,'Sword dance must restore the jug.');
       injected=envelope(players,control({bodyX:.45,leftHandY:-.3,action:'BOW',actionSequence:2}));
       await page.waitForFunction(()=>window.__theatreStatus.leftHybrid.mappingPose.inputLeftHandY<-.25);
       assert.equal((await state()).leftHybrid.startedCount,1);

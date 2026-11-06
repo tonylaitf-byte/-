@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "release": "2026-11-06-integrated",
+  "urls": [
+    "http://127.0.0.1:5000",
+    "http://127.0.0.1:5052"
+  ],
+  "cases": [
+    {
+      "players": 1,
+      "mode": "gesture",
+      "shared_service": true
+    },
+    {
+      "players": 1,
+      "mode": "mapping",
+      "shared_service": true
+    },
+    {
+      "players": 1,
+      "mode": "hybrid",
+      "shared_service": true
+    },
+    {
+      "players": 2,
+      "mode": "gesture",
+      "shared_service": true
+    },
+    {
+      "players": 2,
+      "mode": "mapping",
+      "shared_service": true
+    },
+    {
+      "players": 2,
+      "mode": "hybrid",
+      "shared_service": true
+    }
+  ],
+  "served_assets_verified": 6,
+  "installed_files_verified": 305
+}

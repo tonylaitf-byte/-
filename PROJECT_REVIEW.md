@@ -6,6 +6,8 @@
 
 ### P1：單人 Hybrid 缺少 AudioListener
 
+**2026-11-06 已修正。** 整合場景產生器保證六種場景均有一個啟用的 AudioListener，重新建置 WebGL 並驗證 Hybrid 音訊播放狀態。下文保留原始問題；沒有以音訊計時替代實際 AudioSource 播放旗標，也未聲稱已完成現場聲音回錄。
+
 `Assets/IntegratedTheatre/Editor/HybridTheatreBuilder.cs:33` 移除了 `ActionVoicePresenter`，而該元件原本在 Awake 補上 AudioListener。`CreateSession:74` 只建立 AudioSource，Hybrid session 本身也沒有補接收器。
 
 `SoloHybrid.unity` 與入口場景沒有序列化的 AudioListener；全專案相關執行程式找不到另一個會替 Hybrid 補上的路徑。既有 Play Mode 日誌也持續出現「There are no audio listeners」。因此單人混合模式的字幕／動畫可以繼續，聲音卻缺少輸出所需的接收器。DuetHybrid 則已有一個，不應再無條件新增造成重複。

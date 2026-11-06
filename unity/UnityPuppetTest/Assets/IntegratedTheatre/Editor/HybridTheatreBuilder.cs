@@ -158,7 +158,7 @@ public static class HybridTheatreBuilder
             case "DRINK": return HybridBodyPart.Pelvis | HybridBodyPart.Torso | HybridBodyPart.Head | HybridBodyPart.RightArm;
             case "LANDSCAPE": return HybridBodyPart.Torso | HybridBodyPart.Head | HybridBodyPart.RightArm;
             case "ALERT": return HybridBodyPart.Torso | HybridBodyPart.Head | HybridBodyPart.LeftArm;
-            case "ATTACK": return HybridBodyPart.Torso | HybridBodyPart.RightArm;
+            case "ATTACK": return HybridBodyPart.UpperBody;
             default: throw new ArgumentException("Unknown hybrid action: " + id);
         }
     }
@@ -190,9 +190,14 @@ public static class HybridTheatreBuilder
         {
             if (!clip) throw new InvalidOperationException("Hybrid animation is missing.");
             foreach (var binding in AnimationUtility.GetCurveBindings(clip))
-                if (binding.type != typeof(Transform) || !binding.propertyName.StartsWith("m_LocalRotation.") ||
-                    !paths.Contains(binding.path) || !actor.animator.transform.Find(binding.path))
+            {
+                var target = actor.animator.transform.Find(binding.path);
+                bool rotation = binding.type == typeof(Transform) && binding.propertyName.StartsWith("m_LocalRotation.");
+                bool swordPosition = binding.type == typeof(Transform) && binding.propertyName.StartsWith("m_LocalPosition.") && target && target.name == "Mesh1.0";
+                bool jugVisibility = binding.type == typeof(GameObject) && binding.propertyName == "m_IsActive" && target && target.name == "Mesh1.001";
+                if ((!rotation && !swordPosition && !jugVisibility) || !paths.Contains(binding.path) || !target)
                     throw new InvalidOperationException("Unsupported hybrid curve: " + clip.name + ": " + binding.path + "/" + binding.propertyName);
+            }
         }
         foreach (var action in actor.actions)
             if (action.line == null || !action.line.voice || action.mask == HybridBodyPart.None)

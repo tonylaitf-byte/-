@@ -41,6 +41,8 @@ namespace PalmTheatre.Integration
         HybridAction active;
         PuppetControlState input;
         Quaternion[] animated, entryPose, releasePose, visiblePose, loopPose;
+        Vector3[] animatedAttachments, entryAttachments, releaseAttachments;
+        bool[] restActive, animatedActive;
         Vector3[] visibleVelocity, releaseVelocity;
         bool[] entrySettling;
         float releaseError, releaseStep, releaseSettledTime;
@@ -50,6 +52,7 @@ namespace PalmTheatre.Integration
         float entryDuration, exitDuration, loopDuration, loopElapsed;
         int loopCycle;
         bool blendingLoop;
+        Transform swordAttachment, jugAttachment;
         PlayableGraph graph;
         AnimationPlayableOutput output;
         AnimationClipPlayable clip;
@@ -91,6 +94,14 @@ namespace PalmTheatre.Integration
             visibleVelocity = new Vector3[bones.Length];
             releaseVelocity = new Vector3[bones.Length];
             entrySettling = new bool[bones.Length];
+            animatedAttachments = new Vector3[bones.Length];
+            entryAttachments = new Vector3[bones.Length];
+            releaseAttachments = new Vector3[bones.Length];
+            restActive = new bool[bones.Length];
+            animatedActive = new bool[bones.Length];
+            for (int i = 0; i < bones.Length; i++) restActive[i] = bones[i].bone.gameObject.activeSelf;
+            swordAttachment = Array.Find(bones, item => item.bone.name == "Mesh1.0")?.bone;
+            jugAttachment = Array.Find(bones, item => item.bone.name == "Mesh1.001")?.bone;
             grounded = transform.localPosition;
             RestoreRestPose();
             mapping.useAutomaticDemo = false;
@@ -159,6 +170,7 @@ namespace PalmTheatre.Integration
                 Duration = Mathf.Max(definition.line.animation.length, definition.line.voice.length + voiceDelay + .3f);
             }
             Array.Copy(visiblePose, entryPose, bones.Length);
+            for (int i = 0; i < bones.Length; i++) entryAttachments[i] = bones[i].bone.localPosition;
             Array.Clear(entrySettling, 0, entrySettling.Length);
             SetClip(animation);
             active = definition;
@@ -207,6 +219,7 @@ namespace PalmTheatre.Integration
             releaseElapsed = 0;
             releaseSettledTime = 0;
             Array.Copy(visiblePose, releasePose, bones.Length);
+            for (int i = 0; i < bones.Length; i++) releaseAttachments[i] = bones[i].bone.localPosition;
             // u*(1-u)^3 peaks at 27/256: cap the carried motion at 15 degrees.
             float limit = 15f * 256f / (27f * Mathf.Max(.08f, exitDuration));
             for (int i = 0; i < bones.Length; i++) releaseVelocity[i] = Vector3.ClampMagnitude(visibleVelocity[i], limit);
@@ -256,11 +269,17 @@ namespace PalmTheatre.Integration
                 else
                 {
                     float length = active.line.animation.length;
-                    float time = HybridMotionTiming.ClipTime(Elapsed, Duration, length, length * .25f, length * .7f);
+                    float time = active.actionId == "ATTACK" ? SwordDanceTiming.SampleTime(Elapsed, length, Duration) :
+                        HybridMotionTiming.ClipTime(Elapsed, Duration, length, length * .25f, length * .7f);
                     clip.SetTime(Mathf.Clamp(time, 0, length));
                     graph.Evaluate(0);
                 }
                 Capture(animated);
+                for (int i = 0; i < bones.Length; i++)
+                {
+                    animatedAttachments[i] = bones[i].bone.localPosition;
+                    animatedActive[i] = bones[i].bone.gameObject.activeSelf;
+                }
                 if (blendingLoop)
                 {
                     loopElapsed += deltaTime;
@@ -337,15 +356,22 @@ namespace PalmTheatre.Integration
                     else entrySettling[i] = error > .05f;
                 }
                 item.bone.localRotation = composed;
+                if (item.bone.name == "Mesh1.0")
+                    item.bone.localPosition = releasing ? Vector3.Lerp(releaseAttachments[i], item.restPosition, t) :
+                        Vector3.Lerp(entryAttachments[i], animatedAttachments[i], t);
+                if (item.bone.name == "Mesh1.001" && !releasing)
+                    item.bone.gameObject.SetActive(animatedActive[i]);
             }
         }
 
         void RestoreRestPose()
         {
-            foreach (var item in bones)
+            for (int i = 0; i < bones.Length; i++)
             {
+                var item = bones[i];
                 item.bone.localRotation = item.restRotation;
                 item.bone.localPosition = item.restPosition;
+                if (item.bone.name == "Mesh1.001") item.bone.gameObject.SetActive(restActive[i]);
             }
         }
 
@@ -398,6 +424,8 @@ namespace PalmTheatre.Integration
                 calibrated = input != null && input.calibrated, actionActive = ActionActive,
                 voiceWaiting = VoiceWaiting, action = active?.actionId ?? "IDLE",
                 mask = active?.mask.ToString() ?? "None", error = Error,
+                jugVisible = jugAttachment && jugAttachment.gameObject.activeSelf,
+                swordLocalPosition = swordAttachment ? swordAttachment.localPosition : Vector3.zero,
                 phase = releasing ? "Release" : active == null ? "Mapping" : "Action",
                 blendWeight = active == null ? 0 : releasing ?
                     1 - HybridMotionTiming.Ease(releaseElapsed / exitDuration) :

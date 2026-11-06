@@ -11,7 +11,7 @@ if (-not $UnityPath) {
 if (-not (Test-Path -LiteralPath $UnityPath)) {
     throw "Unity was not found at $UnityPath. Install the project version or pass -UnityPath."
 }
-$arguments = @('-batchmode', '-quit', '-nographics', '-projectPath', ('"' + $project + '"'),
+$arguments = @('-batchmode', '-quit', '-nographics', '-buildTarget', 'WebGL', '-projectPath', ('"' + $project + '"'),
     '-executeMethod', 'IntegratedTheatreBuilder.Build', '-logFile', ('"' + $log + '"'))
 $process = Start-Process -FilePath $UnityPath -ArgumentList $arguments -WindowStyle Hidden -PassThru -Wait
 $contents = if (Test-Path -LiteralPath $log) { Get-Content -LiteralPath $log -Raw } else { '' }

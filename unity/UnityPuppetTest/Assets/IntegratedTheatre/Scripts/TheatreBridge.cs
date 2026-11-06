@@ -29,7 +29,8 @@ namespace PalmTheatre.Integration
         [Serializable] public sealed class Status
         {
             public string sessionId, mode, scene, subtitle, action, error;
-            public int players, actors, sequence, queued;
+            public int players, actors, sequence, queued, audioListeners, banquetRenderers;
+            public bool audioPlaying;
             public bool ready, paused, speaking;
             public float leftX, rightX;
             public bool actionActive;
@@ -52,6 +53,7 @@ namespace PalmTheatre.Integration
         int actionSequence;
         float lastInput = float.NegativeInfinity, nextStatus;
         bool disconnected = true;
+        int sceneAudioListeners, sceneBanquetRenderers;
         [DllImport("__Internal")] static extern void TheatreStatus(string json);
 
         void Awake()
@@ -110,6 +112,10 @@ namespace PalmTheatre.Integration
                 mapping = FindAnyObjectByType<DuetMappingSession>();
                 if (!mapping) Error = "雙人映射舞台元件不完整";
             }
+            sceneAudioListeners = FindObjectsByType<AudioListener>().Length;
+            var banquet = GameObject.Find("Courtyard Banquet Blender Assets");
+            sceneBanquetRenderers = banquet ? banquet.GetComponentsInChildren<Renderer>().Length : 0;
+            if (sceneAudioListeners != 1) Error = "舞台音訊接收器數量不正確";
             Ready = string.IsNullOrEmpty(Error); loading = null;
             PublishStatus();
         }
@@ -214,6 +220,8 @@ namespace PalmTheatre.Integration
                     hybrid && hybrid.Speaker ? hybrid.Speaker.ActiveAction?.actionId ?? "" : leftHybrid?.action ?? "",
                 actors = hybrid ? hybrid.ActorCount : solo ? 1 : duet || mapping ? 2 : 0, sequence = LastSequence,
                 queued = actions ? actions.PendingActionCount : 0,
+                audioListeners = sceneAudioListeners, banquetRenderers = sceneBanquetRenderers,
+                audioPlaying = hybrid && hybrid.voice && hybrid.voice.isPlaying,
                 leftX = hybrid ? hybrid.leftActor.transform.position.x : solo ? solo.transform.position.x : duet ? duet.leftActor.transform.position.x : mapping ? mapping.leftWarrior.transform.position.x : 0,
                 rightX = hybrid && hybrid.rightActor ? hybrid.rightActor.transform.position.x : duet ? duet.rightActor.transform.position.x : mapping ? mapping.rightMusician.transform.position.x : 0,
                 actionActive = (leftHybrid?.actionActive ?? false) || (rightHybrid?.actionActive ?? false),

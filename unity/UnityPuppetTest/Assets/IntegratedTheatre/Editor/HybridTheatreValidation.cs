@@ -139,7 +139,8 @@ public static class HybridTheatreValidation
         Require(session.ActorCount == 1, "Solo actor count changed.");
         session.AcceptSolo(Control());
         Advance(session, 1);
-        var attack = Control(1, "ATTACK");
+        // LANDSCAPE owns the right arm; the new two-arm sword dance owns both.
+        var attack = Control(1, "LANDSCAPE");
         session.AcceptSolo(attack);
         Advance(session, .4f);
         Vector3 hand = actor.mapping.leftHand.position;
@@ -147,7 +148,7 @@ public static class HybridTheatreValidation
         session.AcceptSolo(attack);
         Advance(session, .4f);
         Require(actor.ActionActive && actor.StartedCount == 1 && Vector3.Distance(hand, actor.mapping.leftHand.position) > .02f,
-            "ATTACK blocked unmasked left-arm mapping or replayed.");
+            "LANDSCAPE blocked unmasked left-arm mapping or replayed.");
         report.liveUnmaskedArm = true;
         var busy = Control(2, "BOW");
         busy.leftHandY = .9f;

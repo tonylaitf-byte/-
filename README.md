@@ -2,6 +2,8 @@
 
 以攝影機手部辨識控制 Unity 立體戲偶。整合舞台支援一人俠客、雙人左俠客／右琴師，並提供三種控制模式：手勢動作、手部映射、Hybrid 混合操控。Hybrid 持續以手部映射操偶，同時辨識手勢並讓角色動畫暫時接管指定骨架部位。
 
+最新整合版本（2026-11-06）已將庭院酒席、俠客材質、左手舞劍、放鬆待機與鏡頭來源選擇接入六種演出模式。更新內容與本次驗證見 [INTEGRATION_20261106.md](INTEGRATION_20261106.md)。
+
 ## 啟動
 
 最新修改與驗證範圍見 [CHANGELOG.md](CHANGELOG.md)，組員分支與回退方式見 [VERSION_CONTROL.md](VERSION_CONTROL.md)。
@@ -26,6 +28,8 @@ docker compose up -d --build
 
 攝影機預覽直接播放本機鏡頭，骨架另外疊加。JPEG 編碼與上傳在背景 Worker 執行，辨識結果與控制狀態同次回傳；同時最多處理一張影像，避免舊畫面排隊。辨識影像最大 640×480。鏡頭下方顯示實際鏡頭與辨識 FPS；實際速度依設備與光線而異。
 
+鏡頭來源可切換內建／USB 裝置，或手機提供的 DroidCam／Camo 等攝影機；可選擇裝置、重新偵測並記住選擇。切換不重載舞台，會釋放舊鏡頭並重新校正，詳見 [鏡頭說明](docs/CAMERA_INPUT.md)。
+
 ## 專案與建置
 
 ```text
@@ -41,7 +45,7 @@ reports/                       驗證紀錄（依文件所述版本）
 
 使用 Unity 專案指定版本及 WebGL Build Support 開啟 `unity/UnityPuppetTest`。整合版建置入口為 `Build-IntegratedTheatre.bat`／`Build-IntegratedTheatre.ps1`，呼叫 `IntegratedTheatreBuilder.Build`，預設輸出至 `hand-tracking/static/theatre/`；可傳入 `-UnityPath` 指定 Unity Editor。舊 `Build-WebGL.bat` 是較早的獨立測試建置入口，不會建置整合舞台。
 
-**修改 Unity 原始碼後須重建 WebGL；獨立網頁 JS/CSS 更新後須重新載入網頁。** 本工作副本已更新混合模式 WebGL。2026-10-23 使用本機 Unity 6000.5.3f1 建置成功；儲存庫原指定版本 6000.5.9f1 保留不變。62 項 Python 測試、原四組模式瀏覽器回歸及兩組 Hybrid 瀏覽器測試通過。完整範圍與異常見 [HYBRID_PROGRESS.md](HYBRID_PROGRESS.md)。
+**修改 Unity 原始碼後須重建 WebGL；獨立網頁 JS/CSS 更新後須重新載入網頁。** 本整合版使用 Unity 6000.5.9f1 重建六種場景。當次結果與測試範圍見 [INTEGRATION_20261106.md](INTEGRATION_20261106.md)；[HYBRID_PROGRESS.md](HYBRID_PROGRESS.md) 保留較早工作紀錄。
 
 ## Hybrid 工作與驗收狀態
 

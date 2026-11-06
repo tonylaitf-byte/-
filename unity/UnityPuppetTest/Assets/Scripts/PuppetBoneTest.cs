@@ -156,6 +156,9 @@ public sealed class PuppetBoneTest : MonoBehaviour
     public bool useAutomaticDemo;
     public float demoSpeed = 1.5f;
 
+    [Tooltip("Optional authored idle for gesture scenes. Live mapping scenes leave this unset.")]
+    public AnimationClip gestureIdleClip;
+
     public bool ContinuousIkMode { get; private set; }
     public Vector3 CurrentLeftHandTarget { get; private set; }
     public Vector3 CurrentRightHandTarget { get; private set; }
@@ -558,6 +561,12 @@ public sealed class PuppetBoneTest : MonoBehaviour
             ApplyContinuousIk(mapLeftArm, mapRightArm);
         else
             ApplyLegacyArms(mapLeftArm, mapRightArm);
+
+        // Gesture input still controls horizontal movement, while the authored
+        // resting pose owns the upper body between actions. Animation suspension
+        // above keeps this from overwriting a bow, sword dance, or other action.
+        if (gestureIdleClip != null)
+            gestureIdleClip.SampleAnimation(gameObject, Time.time % gestureIdleClip.length);
 
         ApplyAnimationHandoff();
     }

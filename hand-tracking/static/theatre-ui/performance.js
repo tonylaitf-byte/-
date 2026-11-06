@@ -12,6 +12,14 @@
   let inputRevision = 0, inputPending = false;
   let cameraWorker = null, lastResult = 0, overlayTimeout = null;
   let metricStart = 0, cameraFrames = 0, recognizedFrames = 0, previousPresented = null;
+  let cameraSource='device',cameraEpoch=0,cameraChanging=false,waitingForPhone=false;
+  const phonePattern=/droidcam|camo|iriun|epoccam|ivcam|iphone|ipad|continuity|手機|手机/i;
+  const preferredCameras={device:'',phone:''};
+  try{
+    cameraSource=localStorage.getItem('puppet-camera-source')==='phone'?'phone':'device';
+    for(const source of ['device','phone'])preferredCameras[source]=localStorage.getItem('puppet-camera-'+source)||'';
+  }catch(_){}
+  $('camera-source').value=cameraSource;
   const connections = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[0,17],[17,18],[18,19],[19,20]];
   const warriorNames = ['鞠躬', '賞月', '喝酒', '警惕', '舞劍'];
   const musicianNames = ['抱琴行禮', '慢速撥琴', '停琴回應', '急弦挑戰', '快速演奏'];
@@ -57,8 +65,11 @@
   });
   function feedback(message, error = false) { $('feedback').textContent = message; $('feedback').classList.toggle('error', error); }
   function controls() {
-    $('camera-button').disabled = !ready || cameraStarting || paused || inputPending;
-    $('pause').disabled = !ready || inputPending;
+    $('camera-button').disabled = !ready || cameraStarting || cameraChanging || paused || inputPending;
+    $('camera-source').disabled = !ready || cameraStarting || cameraChanging || paused || inputPending;
+    $('camera-device').disabled = !ready || cameraStarting || cameraChanging || paused || inputPending;
+    $('refresh-cameras').disabled = !ready || cameraStarting || cameraChanging || paused || inputPending;
+    $('pause').disabled = !ready || cameraChanging || inputPending;
     $('reset').disabled = !ready;
     $('instrument').disabled = !ready;
     document.querySelectorAll('.calibrate').forEach(b => b.disabled = !ready || paused || inputPending);
@@ -104,7 +115,7 @@
   }
   async function begin() {
     const current = ++generation;
-    ready = false; paused = false; requestError = false; latestStatus = null; sequence = 0;
+    ready = false; paused = false; requestError = false; latestStatus = null; sequence = 0; cameraChanging = false; waitingForPhone = false;
     inputRevision++; inputPending = false;
     stopLocalCamera(); controls(); $('pause').textContent = '暫停演出';
     $('loading').hidden = false; $('retry').hidden = true; $('load-progress').hidden = false;
@@ -112,7 +123,7 @@
     feedback('正在套用人數與操作模式…');
     try {
       if (unity) command('SetPaused', 'true');
-      session = await api('/performance/start', config, '');
+      session = await api('/performance/start', config, '');cameraEpoch=session.cameraGeneration||0;
       if (current !== generation || leaving) return;
       if (!unity) unity = await loadUnity();
       if (current !== generation || leaving) { await unity.Quit(); return; }
@@ -145,17 +156,20 @@
     if (hybrid) sides.forEach(side => updateRole(side, {}));
     if (stream) stream.getTracks().forEach(track => track.stop());
     stream = null; video.srcObject = null;
+    $('camera-device-name').textContent='';
     $('camera-metrics').textContent = '鏡頭未開啟';
     $('camera-empty').hidden = false; $('camera-message').textContent = '按「開啟鏡頭」開始辨識';
     $('camera-status').textContent = '鏡頭未開啟'; $('camera-button').textContent = '開啟鏡頭';
     controls();
   }
   async function stopCamera() {
+    waitingForPhone=false;
+    inputRevision++;
     stopLocalCamera(); command('Disconnect');
     const current = cameraGeneration;
     cameraStarting = true; controls();
-    try { if (session) await api('/performance/input-stop', {}); }
-    catch (error) { feedback(error.message, true); }
+    try { if (session) {const result=await api('/performance/input-stop', {cameraGeneration:cameraEpoch});if(current===cameraGeneration)cameraEpoch=result.cameraGeneration;} }
+    catch (error) { handleInputError(error); }
     finally { if (current === cameraGeneration) cameraStarting = false; controls(); }
   }
   async function startCamera() {
@@ -165,15 +179,41 @@
     try {
       if (hybrid) {
         inputRevision++;
-        await api('/performance/input-stop', {});
+        const reset = await api('/performance/input-stop', {cameraGeneration:cameraEpoch});
+        cameraEpoch = reset.cameraGeneration;
         if (current !== cameraGeneration || leaving || !ready) return;
       }
       if (!navigator.mediaDevices?.getUserMedia) throw new Error('這個瀏覽器無法開啟攝影機，請使用本機 Chrome 或 Edge。');
-      const acquired = await navigator.mediaDevices.getUserMedia({video: {width: {ideal: 640}, height: {ideal: 480}, frameRate: {ideal: 30}}, audio: false});
+      let cameras=await refreshDevices();
+      if(current!==cameraGeneration||leaving)return;
+      // Labels may be hidden until the browser has camera permission. Release
+      // this discovery stream immediately; it never enters recognition.
+      if(cameraSource==='phone'&&!$('camera-device').value&&cameras.every(device=>!device.label)){
+        const discovery=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+        discovery.getTracks().forEach(track=>track.stop());
+        if(current!==cameraGeneration||leaving)return;
+        cameras=await refreshDevices();
+      }
+      const deviceId=$('camera-device').value;
+      if(cameraSource==='phone'&&!deviceId)throw Object.assign(new Error('尚未偵測到手機鏡頭。請先連接 DroidCam／Camo，再按「重新偵測」；其他名稱可從鏡頭清單手動選取。'),{name:'PhoneCameraNotFound'});
+      const constraints={width:{ideal:640},height:{ideal:480},frameRate:{ideal:30}};
+      if(deviceId)constraints.deviceId={exact:deviceId};
+      let acquired;
+      try{acquired=await navigator.mediaDevices.getUserMedia({video:constraints,audio:false});}
+      catch(error){
+        if(cameraSource==='phone'||!deviceId||error.name!=='OverconstrainedError')throw error;
+        delete constraints.deviceId;acquired=await navigator.mediaDevices.getUserMedia({video:constraints,audio:false});
+      }
       if (current !== cameraGeneration || leaving || !ready) { acquired.getTracks().forEach(track => track.stop()); return; }
       stream = acquired; video.srcObject = stream; await video.play();
       if (current !== cameraGeneration || leaving) return;
       const width = video.videoWidth || 640, height = video.videoHeight || 480;
+      const activeTrack=stream.getVideoTracks()[0],activeDevice=activeTrack?.getSettings().deviceId||deviceId;
+      await refreshDevices(activeDevice);
+      if(current!==cameraGeneration||leaving)return;
+      rememberCamera(activeDevice);
+      $('camera-device-name').textContent='使用中：'+(activeTrack?.label||$('camera-device').selectedOptions[0]?.textContent||'預設鏡頭');
+      waitingForPhone=false;
       overlay.width = width; overlay.height = height;
       video.parentElement.style.aspectRatio = `${width} / ${height}`;
       cameraWorker = new Worker('/static/theatre-ui/camera-worker.js');
@@ -201,7 +241,8 @@
     } catch (error) {
       if (current !== cameraGeneration) return;
       stopLocalCamera();
-      const message = error.name === 'NotAllowedError' ? '請允許攝影機存取，再按「開啟鏡頭」重試。' : error.name === 'NotFoundError' ? '找不到攝影機，請連接後重試。' : error.name === 'NotReadableError' ? '攝影機可能被其他程式占用，關閉後重試。' : error.message;
+      waitingForPhone=cameraSource==='phone'&&['PhoneCameraNotFound','NotFoundError','OverconstrainedError'].includes(error.name);
+      const message = error.name === 'NotAllowedError' ? '請允許攝影機存取，再按「開啟鏡頭」重試。' : error.name === 'NotFoundError'||error.name==='OverconstrainedError' ? (cameraSource==='phone'?'找不到選定的手機鏡頭，請確認 DroidCam／Camo 已連接，再重新偵測。':'找不到攝影機，請連接後重試。') : error.name === 'NotReadableError' ? '攝影機可能被其他程式占用，關閉後重試。' : error.message;
       $('camera-message').textContent = message; feedback(message, true);
     } finally { if (current === cameraGeneration) cameraStarting = false; controls(); }
   }
@@ -242,7 +283,7 @@
       createImageBitmap(video).then(bitmap => {
         if (current !== cameraGeneration || worker !== cameraWorker) { bitmap.close(); return; }
         if (!ready || paused || inputPending || revision !== inputRevision || session?.sessionId !== token) { bitmap.close(); sending = false; return; }
-        worker.postMessage({bitmap, sessionId:token, inputRevision:revision, calibrationRevision}, [bitmap]);
+        worker.postMessage({bitmap, sessionId:token, inputRevision:revision, calibrationRevision, cameraGeneration:cameraEpoch}, [bitmap]);
       }).catch(error => { if (current === cameraGeneration) { sending = false; handleInputError(error); } });
     }
     scheduleCapture(current);
@@ -270,6 +311,7 @@
   }
   function applyState(result) {
     if (paused || inputPending || result.sessionId !== session?.sessionId) return;
+    if (cameraChanging || (result.cameraGeneration !== undefined && result.cameraGeneration !== cameraEpoch)) return;
     if (result.discardedFrame || result.calibrationRevision !== session.calibrationRevision) return;
     const state = result.state;
     sides.forEach(side => updateRole(side, duet ? state[side] : state));
@@ -305,7 +347,7 @@
     if (current === generation && !leaving && ready) setTimeout(() => poll(current), 250);
   }
   async function calibrate(side) {
-    if (inputPending) return;
+    if (inputPending || cameraChanging || cameraStarting) return;
     const current = generation;
     inputRevision++; inputPending = true; controls();
     clearTimeout(overlayTimeout); drawHands([]);
@@ -336,6 +378,45 @@
     command('EndPerformance');
     if (session) navigator.sendBeacon('/performance/stop', new Blob([JSON.stringify({sessionId: session.sessionId})], {type: 'application/json'}));
   }
+  function rememberCamera(id){
+    preferredCameras[cameraSource]=id;
+    try{localStorage.setItem('puppet-camera-'+cameraSource,id);}catch(_){}
+  }
+  function showCameraSource(){
+    $('phone-camera-help').hidden=cameraSource!=='phone';
+    $('camera-device-label').textContent=cameraSource==='phone'?'選擇手機提供的鏡頭':'選擇本機鏡頭';
+  }
+  async function refreshDevices(selected,reset=false){
+    if(!navigator.mediaDevices?.enumerateDevices)return [];
+    const cameras=(await navigator.mediaDevices.enumerateDevices()).filter(device=>device.kind==='videoinput');
+    const current=selected===undefined?(reset?'':$('camera-device').value):selected;
+    const known=cameras.filter(device=>phonePattern.test(device.label));
+    const others=cameras.filter(device=>!phonePattern.test(device.label));
+    const wanted=[current,preferredCameras[cameraSource],...(cameraSource==='phone'?known:others).map(device=>device.deviceId)].find(id=>id&&cameras.some(device=>device.deviceId===id));
+    $('camera-device').replaceChildren(new Option(cameraSource==='phone'?'自動偵測手機鏡頭':'預設鏡頭',''));
+    function group(label,items){if(!items.length)return;const section=document.createElement('optgroup');section.label=label;items.forEach(device=>section.append(new Option(device.label||'鏡頭 '+(cameras.indexOf(device)+1),device.deviceId)));$('camera-device').append(section);}
+    if(cameraSource==='phone'){group('手機攝影機',known);group('其他鏡頭（可手動選取）',others);}
+    else{group('本機攝影機',others);group('手機攝影機',known);}
+    $('camera-device').value=wanted||'';
+    return cameras;
+  }
+  async function switchCamera(){
+    if(!ready||cameraChanging||leaving)return;cameraChanging=true;controls();
+    try{await stopCamera();if(!ready||leaving)return;await refreshDevices(undefined,true);await startCamera();}
+    finally{cameraChanging=false;controls();}
+  }
+  $('camera-source').addEventListener('change',()=>{
+    cameraSource=$('camera-source').value;showCameraSource();
+    try{localStorage.setItem('puppet-camera-source',cameraSource);}catch(_){}
+    switchCamera();
+  });
+  $('camera-device').addEventListener('change',async()=>{rememberCamera($('camera-device').value);await switchCamera();});
+  $('refresh-cameras').addEventListener('click',async()=>{
+    try{await refreshDevices();if(!stream)await startCamera();else feedback('鏡頭清單已更新。');}catch(error){feedback(error.message,true);}
+  });
+  navigator.mediaDevices?.addEventListener('devicechange',async()=>{
+    try{await refreshDevices(stream?.getVideoTracks()[0]?.getSettings().deviceId);if(waitingForPhone&&cameraSource==='phone'&&$('camera-device').value&&!stream&&!cameraStarting&&!cameraChanging)await startCamera();}catch(_){}
+  });
   $('camera-button').addEventListener('click', () => stream ? stopCamera() : startCamera());
   $('reset').addEventListener('click', begin);
   $('pause').addEventListener('click', async () => {
@@ -379,5 +460,5 @@
   ['back', 'back-link'].forEach(id => $(id).addEventListener('click', cleanup));
   window.addEventListener('pagehide', cleanup);
   window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
-  begin();
+  showCameraSource();begin();
 })();

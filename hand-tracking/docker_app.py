@@ -443,6 +443,10 @@ def receive_frame():
             return {'error': '這個辨識頁面已不屬於目前演出。'}, 409
         if performance is None and request.headers.get('X-Performance-Session'):
             return {'error': '本次演出已結束。'}, 409
+        if performance is not None:
+            epoch = request.headers.get('X-Camera-Generation')
+            if (epoch is not None or performance['cameraGeneration'] > 0) and epoch != str(performance['cameraGeneration']):
+                return {'error': '鏡頭已切換，舊影格已忽略。'}, 410
         compact = performance is not None and request.headers.get('Accept') == 'application/json'
         if performance is not None:
             revision = request.headers.get('X-Calibration-Revision', '0')
@@ -500,6 +504,7 @@ def health():
         }
     return {
         "status": "ok",
+        "release": os.environ.get('THEATRE_RELEASE', 'development'),
         "inputMode": "browser",
         "calibrated": calibrated,
         "calibrationProgress": round(calibration_progress, 4),

@@ -57,6 +57,8 @@ namespace PalmTheatre.Integration
         public string role, action, mask, phase, error;
         public int ownerId, inputEpoch, actionSequence, startedActionSequence, startedCount, droppedCount;
         public bool ownerHeld, handDetected, calibrated, actionActive, voiceWaiting;
+        public bool jugVisible;
+        public Vector3 swordLocalPosition;
         public float blendWeight;
         public HybridPoseStatus mappingPose;
     }

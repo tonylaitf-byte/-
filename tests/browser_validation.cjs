@@ -57,6 +57,8 @@ fs.mkdirSync(output, {recursive:true});
       assert.equal(initial.actors, players); assert.equal(initial.mode,mode);
       assert.equal(initial.scene, (players === 1 ? 'Solo' : 'Duet') + (mode === 'gesture' ? 'Gesture' : 'Mapping'));
       assert.equal(initial.error,'');
+      assert.equal(initial.audioListeners,1);
+      assert.ok(initial.banquetRenderers>=28);
       if (players === 2) { assert.ok(initial.leftX < 0); assert.ok(initial.rightX > 0); }
       await page.screenshot({path:path.join(output,`${players}-${mode}.png`),fullPage:true});
       await page.locator('#pause').click();
