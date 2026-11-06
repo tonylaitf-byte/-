@@ -33,8 +33,11 @@ if (!(Test-DockerReady)) {
     if (!$dockerReady) { throw 'Docker Desktop is still starting. Run this launcher again shortly.' }
 }
 
+$configuredImages = @(& $docker compose -f $compose config --images)
+if ($LASTEXITCODE -ne 0 -or $configuredImages.Count -eq 0) { throw 'Could not read the configured theatre image.' }
+$image = $configuredImages[0]
 try {
-    & $docker image inspect 'palm-theatre-integration:20261106' 2>$null | Out-Null
+    & $docker image inspect $image 2>$null | Out-Null
     $imageReady = $LASTEXITCODE -eq 0
 } catch { $imageReady = $false }
 if ($imageReady -and !$Rebuild) {

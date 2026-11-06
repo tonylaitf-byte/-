@@ -4,11 +4,12 @@ import threading
 import time
 from duet_tracking import DuetHandRouter
 from gesture_recognizer import GestureActionRecognizer, HybridGestureActionRecognizer
-from puppet_controls import PuppetControlPipeline, CONTROL_DEFAULTS, make_puppet_payload, clamp
+from puppet_controls import (PuppetControlPipeline, CONTROL_DEFAULTS, make_puppet_payload, clamp,
+                             HYBRID_CALIBRATION_SAMPLES, HYBRID_CALIBRATION_SECONDS)
 
 
 class DuetMappingRouter:
-    def __init__(self, calibration_samples=45, lost_grace=1.0, hybrid=False):
+    def __init__(self, calibration_samples=None, lost_grace=1.0, hybrid=False):
         self.samples=calibration_samples
         self.lock=threading.RLock()
         self.hybrid=bool(hybrid)
@@ -27,13 +28,19 @@ class DuetMappingRouter:
     def reset(self):
         with self.lock:
             self.ownership.reset()
-            self.pipelines={side:PuppetControlPipeline(calibration_samples=self.samples) for side in ('left','right')}
+            self.pipelines={side:self._new_pipeline() for side in ('left','right')}
             self.owners={side:0 for side in ('left','right')}
             self.owner_revisions={side:0 for side in ('left','right')}
             self.last={side:CONTROL_DEFAULTS.copy() for side in ('left','right')}
             self.sequence={side:0 for side in ('left','right')}
             self.last_time={side:None for side in ('left','right')}
             self.state=None
+
+    def _new_pipeline(self):
+        quick = self.hybrid and self.samples is None
+        samples = self.samples if self.samples is not None else HYBRID_CALIBRATION_SAMPLES if quick else 45
+        return PuppetControlPipeline(calibration_samples=samples,
+            calibration_seconds=HYBRID_CALIBRATION_SECONDS if quick else None)
 
     def snapshot(self):
         with self.lock:
@@ -91,7 +98,7 @@ class DuetMappingRouter:
                         or owner['ownerRevision']!=self.owner_revisions[side]):
                     self.owners[side]=owner['ownerId']
                     self.owner_revisions[side]=owner['ownerRevision']
-                    self.pipelines[side]=PuppetControlPipeline(calibration_samples=self.samples)
+                    self.pipelines[side]=self._new_pipeline()
                     self.last[side]=CONTROL_DEFAULTS.copy()
                     if self.hybrid:
                         recognizer=self.ownership.recognizers[side]

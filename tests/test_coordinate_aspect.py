@@ -135,6 +135,9 @@ class CoordinateTransportTests(unittest.TestCase):
                                 patch.object(service.core, 'hands', detector), \
                                 patch.object(service, 'duet_hands', detector):
                             session = client.post('/performance/start', json={'players': players, 'mode': mode}).get_json()
+                            # Geometry is isolated with a one-sample baseline;
+                            # session start now selects the production timing profile.
+                            pipe.configure_calibration(calibration_samples=1)
                             headers = {'X-Performance-Session': session['sessionId'], 'Accept': 'application/json'}
                             jpeg = cv2.imencode('.jpg', np.full((size[1], size[0], 3), 120, np.uint8))[1].tobytes()
                             for index, pose in enumerate((neutral, moved)):

@@ -117,6 +117,19 @@ def classify_counting_gesture(landmarks):
     return 0
 
 
+def classify_hybrid_gesture(landmarks):
+    """Hybrid sword command: thumb + index; an open palm is neutral."""
+    if landmarks is None or len(landmarks) < 21:
+        return 0
+    thumb, _ = _thumb_state(landmarks)
+    if (thumb and _finger_extended(landmarks, 8, 6, 5)
+            and not any(_finger_extended(landmarks, *finger)
+                        for finger in ((12, 10, 9), (16, 14, 13), (20, 18, 17)))):
+        return 5
+    gesture = classify_counting_gesture(landmarks)
+    return 0 if gesture == 5 else gesture
+
+
 class GestureActionRecognizer:
     def __init__(self, hold_seconds=0.5, cooldown_seconds=3.0):
         self.hold_seconds = max(0.1, float(hold_seconds))
@@ -206,7 +219,7 @@ class HybridGestureActionRecognizer(GestureActionRecognizer):
     def update(self, landmarks, timestamp=None, enabled=True):
         now = time.monotonic() if timestamp is None else float(timestamp)
         tracked = landmarks is not None and len(landmarks) >= 21
-        gesture = classify_counting_gesture(landmarks) if tracked else 0
+        gesture = classify_hybrid_gesture(landmarks) if tracked else 0
         self.triggered_action = ""
         if not enabled or not tracked:
             self.suspend()

@@ -545,6 +545,8 @@ def set_control_mode():
             if control_mode == mode:
                 return {"status": "ok", "mode": mode}
             control_mode = mode
+        with core.pipeline_lock:
+            core.pipeline.configure_calibration()
         gesture_recognizer.reset()
         reset_solo_hybrid()
         gesture_movement.reset()

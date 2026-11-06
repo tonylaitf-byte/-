@@ -4,6 +4,8 @@
 
 最新整合版本（2026-11-06）已將庭院酒席、俠客材質、左手舞劍、放鬆待機與鏡頭來源選擇接入六種演出模式。更新內容與本次驗證見 [INTEGRATION_20261106.md](INTEGRATION_20261106.md)。
 
+2026-11-07：混合模式首次校正已縮短；第 5 手勢改用拇指＋食指伸出，其餘三指收起。一般手勢模式維持原五指張開，詳見 [HYBRID_QUICK_START.md](HYBRID_QUICK_START.md)。
+
 ## 啟動
 
 最新修改與驗證範圍見 [CHANGELOG.md](CHANGELOG.md)，組員分支與回退方式見 [VERSION_CONTROL.md](VERSION_CONTROL.md)。

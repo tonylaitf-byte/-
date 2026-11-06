@@ -89,7 +89,7 @@ class HybridModeTests(unittest.TestCase):
         self.start()
         with service.inference_lock:
             for now in (1000, 1000.6, 1004):
-                state = self.push(hand({'thumb', 'index', 'middle', 'ring', 'pinky'}), now)
+                state = self.push(hand({'thumb', 'index'}), now)
                 self.assertTrue(state['calibrated'])
                 self.assertAlmostEqual(state['bodyX'], .3, places=3)
                 self.assertEqual(state['gesture'], 5)

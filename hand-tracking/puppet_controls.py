@@ -310,9 +310,15 @@ def controls_from_landmarks(landmarks, frame_size=None):
     }
 
 
+HYBRID_CALIBRATION_SAMPLES = 12
+HYBRID_CALIBRATION_SECONDS = 0.6
+
+
 class NeutralPoseCalibrator:
-    def __init__(self, samples_required=45):
+    def __init__(self, samples_required=45, minimum_seconds=None):
         self.samples_required = max(1, int(samples_required))
+        self.minimum_seconds = ((self.samples_required - 1) / 30.0 if minimum_seconds is None
+                                else max(0.0, float(minimum_seconds)))
         self.reset()
 
     @property
@@ -324,7 +330,7 @@ class NeutralPoseCalibrator:
         if self.calibrated:
             return 1.0
         count_progress = len(self._samples) / self.samples_required
-        duration = (self.samples_required - 1) / 30.0
+        duration = self.minimum_seconds
         time_progress = ((self._last_time - self._start_time) / duration
                          if duration and self._samples else 1.0)
         return min(count_progress, max(1.0 / self.samples_required, time_progress))
@@ -364,11 +370,11 @@ class NeutralPoseCalibrator:
         self._samples.append(sample)
         # Keep memory bounded at high capture rates while retaining the window
         # start and full extrema until calibration completes.
-        if len(self._samples) > self.samples_required * 8:
+        if len(self._samples) > max(self.samples_required * 8, math.ceil(self.minimum_seconds * 240) + 1):
             self.reset()
             return
         if (len(self._samples) >= self.samples_required
-                and now - self._start_time + 1e-9 >= (self.samples_required - 1) / 30.0):
+                and now - self._start_time + 1e-9 >= self.minimum_seconds):
             self._baseline = {
                 key: statistics.median(sample[key] for sample in self._samples)
                 for key in CALIBRATED_KEYS
@@ -506,14 +512,18 @@ class AdaptiveControlSmoother:
 
 
 class PuppetControlPipeline:
-    def __init__(self, alpha=None, calibration_samples=45):
+    def __init__(self, alpha=None, calibration_samples=45, calibration_seconds=None):
         self.smoother = (
             AdaptiveControlSmoother()
             if alpha is None
             else ControlSmoother(alpha=alpha)
         )
-        self.calibrator = NeutralPoseCalibrator(samples_required=calibration_samples)
+        self.configure_calibration(calibration_samples, calibration_seconds)
         self._frame_size = None
+
+    def configure_calibration(self, calibration_samples=45, calibration_seconds=None):
+        self.calibrator = NeutralPoseCalibrator(calibration_samples, calibration_seconds)
+        self.smoother.reset()
 
     @property
     def calibrated(self):

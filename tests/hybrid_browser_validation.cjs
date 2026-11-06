@@ -51,6 +51,8 @@ fs.mkdirSync(output, {recursive:true});
       assert.equal(initial.audioListeners,1);
       assert.ok(initial.banquetRenderers>=28);
       assert.equal(await page.locator('.calibrate').count(),players);
+      assert.match(await page.locator('.gesture-row').nth(4).innerText(),/拇指＋食指伸出，其餘三指收起/);
+      assert.match(await page.locator('#instructions').innerText(),/0.6 秒/);
       injected=envelope(players,control(),control({bodyX:-.3}));
       await page.waitForFunction(()=>window.__theatreStatus?.leftHybrid?.calibrated && window.__theatreStatus.leftHybrid.inputEpoch===10000);
       await page.waitForFunction(x=>Math.abs(window.__theatreStatus.leftX-x)>.05,initial.leftX);
