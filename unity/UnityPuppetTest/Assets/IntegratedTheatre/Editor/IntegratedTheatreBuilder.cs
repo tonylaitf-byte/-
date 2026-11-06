@@ -53,11 +53,11 @@ public static class IntegratedTheatreBuilder
         });
         Directory.CreateDirectory("IntegrationReports");
         File.WriteAllText("IntegrationReports/Build.json", JsonUtility.ToJson(new BuildRecord {
-            passed = report.summary.result == BuildResult.Succeeded, errors = report.summary.totalErrors,
+            passed = report.summary.result == BuildResult.Succeeded, errors = report.summary.totalErrors, version = PlayerSettings.bundleVersion,
             bytes = report.summary.totalSize, output = output, scenes = Scenes
         }, true));
         if (report.summary.result != BuildResult.Succeeded) throw new Exception("Integrated WebGL build failed.");
         Debug.Log("INTEGRATED_THEATRE_BUILD_PASS");
     }
-    [Serializable] class BuildRecord { public bool passed; public int errors; public ulong bytes; public string output; public string[] scenes; }
+    [Serializable] class BuildRecord { public bool passed; public int errors; public ulong bytes; public string version, output; public string[] scenes; }
 }

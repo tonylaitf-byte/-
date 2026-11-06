@@ -1,0 +1,56 @@
+{
+  "passed": true,
+  "version": "1.1",
+  "cases": [
+    {
+      "players": 1,
+      "mode": "gesture",
+      "scene": "SoloGesture",
+      "version": "1.1",
+      "mirrored": false,
+      "ready": true
+    },
+    {
+      "players": 1,
+      "mode": "mapping",
+      "scene": "SoloMapping",
+      "version": "1.1",
+      "mirrored": false,
+      "ready": true
+    },
+    {
+      "players": 1,
+      "mode": "hybrid",
+      "scene": "SoloHybrid",
+      "version": "1.1",
+      "mirrored": false,
+      "ready": true
+    },
+    {
+      "players": 2,
+      "mode": "gesture",
+      "scene": "DuetGesture",
+      "version": "1.1",
+      "mirrored": true,
+      "ready": true
+    },
+    {
+      "players": 2,
+      "mode": "mapping",
+      "scene": "DuetMapping",
+      "version": "1.1",
+      "mirrored": true,
+      "ready": true
+    },
+    {
+      "players": 2,
+      "mode": "hybrid",
+      "scene": "DuetHybrid",
+      "version": "1.1",
+      "mirrored": true,
+      "ready": true
+    }
+  ],
+  "errors": [],
+  "camera": "simulated"
+}

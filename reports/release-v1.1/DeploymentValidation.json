@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "installedFilesVerified": 21,
+  "containerSourceFilesVerified": 4,
+  "endpoints": [
+    {
+      "port": 5000,
+      "status": "ok",
+      "release": "1.1",
+      "pageAndScriptVerified": true
+    },
+    {
+      "port": 5052,
+      "status": "ok",
+      "release": "1.1",
+      "pageAndScriptVerified": true
+    }
+  ],
+  "windowsPowerShellLauncher": "passed"
+}

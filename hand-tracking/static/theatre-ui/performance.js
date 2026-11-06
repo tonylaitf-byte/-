@@ -105,7 +105,7 @@
         try {
           const instance = await createUnityInstance($('unity-canvas'), {
             dataUrl: '/static/theatre/Build/theatre.data', frameworkUrl: '/static/theatre/Build/theatre.framework.js', codeUrl: '/static/theatre/Build/theatre.wasm',
-            streamingAssetsUrl: '/static/theatre/StreamingAssets', companyName: 'PalmTheatre', productName: '掌中智戲', productVersion: '1.0',
+            streamingAssetsUrl: '/static/theatre/StreamingAssets', companyName: 'PalmTheatre', productName: '掌中智戲', productVersion: '1.1',
             devicePixelRatio: Math.min(window.devicePixelRatio || 1, 1.5)
           }, value => { $('load-progress').value = value; $('load-detail').textContent = `載入舞台 ${Math.round(value * 100)}%`; });
           resolve(instance);

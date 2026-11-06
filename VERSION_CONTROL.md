@@ -1,8 +1,17 @@
 # 共編與版本控制
 
+## v1.1 發布
+
+- 發布分支：`release/v1.1`；版本標籤：`v1.1`。
+- [GitHub Release](https://github.com/tonylaitf-byte/-/releases/tag/v1.1) 收錄完整原始碼與預先建置的 WebGL；啟動不需要 Unity Editor。
+- 來源為下列組員分支及本機整合，再加入快速校正、新手勢、混合待機及單人鏡頭修正；詳細內容見 [RELEASE_NOTES_v1.1.md](RELEASE_NOTES_v1.1.md)。
+- 發布分支推送後透過 PR 審查合併 main；保留組員分支，不改寫歷史。
+
+## 前期整合紀錄
+
 2026-11-06 本機整合：來源為 `origin/codex/hybrid-stability-20261025` 的 `d36fd98`，整合工作保存在本機 `integration/20261106`。本次不會替組員的 GitHub 分支改寫歷史；遠端推送與 PR 合併須以實際 Git 紀錄為準。詳細來源見 [INTEGRATION_20261106.md](INTEGRATION_20261106.md)。
 
-## 本次版本
+## 前期共編版本
 
 - 儲存庫：https://github.com/tonylaitf-byte/-
 - 基準：`0497210`。

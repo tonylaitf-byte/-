@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "version": "1.1",
+  "unityBuild": true,
+  "unityBuildErrors": 0,
+  "sixBrowserModes": true,
+  "camera": "simulated",
+  "versionMetadataConsistent": true,
+  "functionalBaseline": "b065c7f",
+  "backendAndRuntimeScriptsUnchangedSinceBaseline": true,
+  "baselineBackendTests": 98,
+  "baselineHandoffCases": 60,
+  "baselineIdleActors": 3,
+  "containerRelease": "1.1"
+}
