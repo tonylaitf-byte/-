@@ -54,9 +54,14 @@ fs.mkdirSync(output, {recursive:true});
       await page.waitForFunction(() => document.getElementById('camera-status').textContent === '鏡頭已開啟', {timeout:15000});
       await page.waitForFunction(() => document.getElementById('preview').videoWidth > 0, {timeout:15000});
       const initial = await page.evaluate(() => window.__theatreStatus);
+      assert.equal(await page.locator('#preview').evaluate(video => getComputedStyle(video).transform),
+        players === 1 ? 'none' : 'matrix(-1, 0, 0, 1, 0, 0)');
+      if (mode === 'mapping') assert.match(await page.locator('#instructions').innerText(), /0.6 秒/);
       assert.equal(initial.actors, players); assert.equal(initial.mode,mode);
       assert.equal(initial.scene, (players === 1 ? 'Solo' : 'Duet') + (mode === 'gesture' ? 'Gesture' : 'Mapping'));
       assert.equal(initial.error,'');
+      assert.equal(initial.audioListeners,1);
+      assert.ok(initial.banquetRenderers>=28);
       if (players === 2) { assert.ok(initial.leftX < 0); assert.ok(initial.rightX > 0); }
       await page.screenshot({path:path.join(output,`${players}-${mode}.png`),fullPage:true});
       await page.locator('#pause').click();

@@ -1,6 +1,7 @@
 import math
 import statistics
 import time
+from types import SimpleNamespace
 
 
 PAYLOAD_VERSION = 2
@@ -257,9 +258,25 @@ def palm_center_reach(landmarks, tip_index, frame):
     return clamp((0.70 - distance) / (0.70 - 0.28), 0.0, 1.0)
 
 
-def controls_from_landmarks(landmarks):
+def _image_aspect(frame_size):
+    if frame_size is None:
+        return 1.0
+    width, height = map(float, frame_size)
+    if not all(math.isfinite(value) and value > 0 for value in (width, height)):
+        raise ValueError("frame_size must contain positive finite width and height")
+    return width / height
+
+
+def controls_from_landmarks(landmarks, frame_size=None):
+    """Map image landmarks; frame_size is the detector image (width, height)."""
+    screen_center = _average([_vector(landmarks[i]) for i in (0, 5, 9, 13, 17)])
+    aspect = _image_aspect(frame_size)
+    # MediaPipe x and z use image-width units, while y uses image-height units.
+    # Keep the input untouched for overlays, screen travel and hand ownership.
+    landmarks = [SimpleNamespace(x=float(p.x), y=float(p.y) / aspect,
+                                 z=float(getattr(p, "z", 0.0))) for p in landmarks]
     frame = _palm_frame(landmarks)
-    center, _, y_axis, z_axis, palm_scale = frame
+    _, _, y_axis, z_axis, palm_scale = frame
     thumb_direction = _palm_local_vector(landmarks, 2, 4, frame)
     middle_direction = _palm_local_vector(landmarks, 9, 12, frame)
     pinky_direction = _palm_local_vector(landmarks, 17, 20, frame)
@@ -276,7 +293,7 @@ def controls_from_landmarks(landmarks):
         "leftArm": thumb_center_reach,
         "rightArm": pinky_center_reach,
         "bodyTurn": clamp(palm_yaw / 45.0, -2.0, 2.0),
-        "moveX": clamp((center[0] - 0.5) * 2.0, -1.0, 1.0),
+        "moveX": clamp((screen_center[0] - 0.5) * 2.0, -1.0, 1.0),
         "leftHandX": thumb_direction[0],
         "leftHandY": thumb_direction[1],
         "leftHandZ": -thumb_direction[2],
@@ -286,16 +303,22 @@ def controls_from_landmarks(landmarks):
         "headPitch": -middle_direction[1],
         "headYaw": middle_direction[0],
         "headRoll": -middle_direction[2],
-        "bodyX": center[0],
-        "bodyY": -center[1],
+        "bodyX": screen_center[0],
+        "bodyY": -screen_center[1],
         "bodyDepth": math.log(palm_scale),
         "bodyLean": clamp(palm_roll / 45.0, -2.0, 2.0),
     }
 
 
+FAST_CALIBRATION_SAMPLES = 12
+FAST_CALIBRATION_SECONDS = 0.6
+
+
 class NeutralPoseCalibrator:
-    def __init__(self, samples_required=45):
+    def __init__(self, samples_required=45, minimum_seconds=None):
         self.samples_required = max(1, int(samples_required))
+        self.minimum_seconds = ((self.samples_required - 1) / 30.0 if minimum_seconds is None
+                                else max(0.0, float(minimum_seconds)))
         self.reset()
 
     @property
@@ -306,20 +329,52 @@ class NeutralPoseCalibrator:
     def progress(self):
         if self.calibrated:
             return 1.0
-        return len(self._samples) / self.samples_required
+        count_progress = len(self._samples) / self.samples_required
+        duration = self.minimum_seconds
+        time_progress = ((self._last_time - self._start_time) / duration
+                         if duration and self._samples else 1.0)
+        return min(count_progress, max(1.0 / self.samples_required, time_progress))
 
     def reset(self):
         self._samples = []
         self._baseline = None
+        self._start_time = None
+        self._last_time = None
 
-    def observe(self, raw_controls):
+    def interrupt(self):
+        if not self.calibrated:
+            self.reset()
+
+    def observe(self, raw_controls, timestamp=None):
         if self.calibrated:
             return
-
-        self._samples.append(
-            {key: float(raw_controls.get(key, 0.0)) for key in CALIBRATED_KEYS}
-        )
-        if len(self._samples) >= self.samples_required:
+        now = time.monotonic() if timestamp is None else float(timestamp)
+        sample = {key: float(raw_controls.get(key, 0.0))
+                  for key in (*CALIBRATED_KEYS, 'headNod')}
+        if not math.isfinite(now) or not all(math.isfinite(v) for v in sample.values()):
+            self.reset()
+            return
+        if self._last_time is not None and not 0 <= now - self._last_time <= .35:
+            self.reset()
+        # Bound the full window's spread, so slow drift cannot accumulate into
+        # a false neutral pose. Thresholds are expressed after control gain.
+        if self._samples and any(
+            (max(sample[key], max(s[key] for s in self._samples))
+             - min(sample[key], min(s[key] for s in self._samples)))
+            * CONTROL_GAINS.get(key, 1.0) > .12 for key in sample
+        ):
+            self.reset()
+        if not self._samples:
+            self._start_time = now
+        self._last_time = now
+        self._samples.append(sample)
+        # Keep memory bounded at high capture rates while retaining the window
+        # start and full extrema until calibration completes.
+        if len(self._samples) > max(self.samples_required * 8, math.ceil(self.minimum_seconds * 240) + 1):
+            self.reset()
+            return
+        if (len(self._samples) >= self.samples_required
+                and now - self._start_time + 1e-9 >= self.minimum_seconds):
             self._baseline = {
                 key: statistics.median(sample[key] for sample in self._samples)
                 for key in CALIBRATED_KEYS
@@ -457,13 +512,18 @@ class AdaptiveControlSmoother:
 
 
 class PuppetControlPipeline:
-    def __init__(self, alpha=None, calibration_samples=45):
+    def __init__(self, alpha=None, calibration_samples=45, calibration_seconds=None):
         self.smoother = (
             AdaptiveControlSmoother()
             if alpha is None
             else ControlSmoother(alpha=alpha)
         )
-        self.calibrator = NeutralPoseCalibrator(samples_required=calibration_samples)
+        self.configure_calibration(calibration_samples, calibration_seconds)
+        self._frame_size = None
+
+    def configure_calibration(self, calibration_samples=45, calibration_seconds=None):
+        self.calibrator = NeutralPoseCalibrator(calibration_samples, calibration_seconds)
+        self.smoother.reset()
 
     @property
     def calibrated(self):
@@ -486,15 +546,29 @@ class PuppetControlPipeline:
         self.calibrator.reset()
         self.smoother.reset()
 
-    def update(self, landmarks, timestamp=None):
-        raw_controls = controls_from_landmarks(landmarks)
-        self.calibrator.observe(raw_controls)
+    def set_frame_size(self, frame_size):
+        if frame_size is None:
+            return False
+        aspect = _image_aspect(frame_size)
+        changed = self._frame_size is not None and not math.isclose(
+            aspect, _image_aspect(self._frame_size), rel_tol=1e-3)
+        self._frame_size = tuple(frame_size)
+        if changed:
+            # A new camera crop/aspect invalidates the old screen/depth baseline.
+            self.reset_calibration()
+        return changed
+
+    def update(self, landmarks, timestamp=None, frame_size=None):
+        self.set_frame_size(frame_size)
+        raw_controls = controls_from_landmarks(landmarks, self._frame_size)
+        self.calibrator.observe(raw_controls, timestamp=timestamp)
         calibrated = self.calibrator.apply(raw_controls)
         if isinstance(self.smoother, AdaptiveControlSmoother):
             return self.smoother.update(calibrated, timestamp=timestamp)
         return self.smoother.update(calibrated)
 
     def no_hand(self, timestamp=None):
+        self.calibrator.interrupt()
         if isinstance(self.smoother, AdaptiveControlSmoother):
             return self.smoother.update(CONTROL_DEFAULTS, timestamp=timestamp)
         return self.smoother.update(CONTROL_DEFAULTS)

@@ -9,6 +9,7 @@ public sealed class MusicianPoseAuthor
     readonly Transform root, chest, head;
     public readonly Transform[] bones;
     readonly Quaternion[] rest;
+    readonly Quaternion[] actionPose;
     readonly Vector3[] positions;
     readonly Vector3 origin, left, front;
     readonly Vector3 wrist, pole, fingerDirection, thumbDirection;
@@ -21,6 +22,7 @@ public sealed class MusicianPoseAuthor
         var skeleton = Find("Root");
         bones = skeleton.GetComponentsInChildren<Transform>().Where(t => !t.name.StartsWith("Yueqin") && !t.GetComponent<Renderer>() && !t.GetComponent<MeshFilter>() && !t.IsChildOf(Find("Yueqin_Independent"))).ToArray();
         rest = bones.Select(b=>b.localRotation).ToArray(); positions = bones.Select(b=>b.localPosition).ToArray();
+        actionPose = new Quaternion[bones.Length];
         origin = skeleton.position; front = Vector3.back; left = Vector3.right;
         wrist = chest.InverseTransformPoint(Find("RightHand").position);
         pole = chest.InverseTransformPoint(P(-.45f,-.15f,1.12f));
@@ -46,7 +48,7 @@ public sealed class MusicianPoseAuthor
         Vector3 targetLocal=wrist, dirLocal=fingerDirection, radialLocal=thumbDirection;
         Vector3 desiredTarget=P(-.20f,-.548f,1.13f), desiredDir=D(.94f,-.30f,-.33f).normalized, desiredRadial=Vector3.up;
         float gesture=0, play=0, stroke=0, bow=0, yaw=0, nod=0, sway=0, open=0;
-        if(state=="MusicIdle") { sway=.28f*Mathf.Sin(t*Mathf.PI); nod=.2f*Mathf.Sin(t*Mathf.PI); }
+        if(state=="MusicIdle") { sway=0; nod=0; }
         if(state=="Greeting")
         {
             gesture=Envelope(t,.45f,1.2f,2.6f,3.6f);
@@ -133,6 +135,31 @@ public sealed class MusicianPoseAuthor
             foreach(string joint in new[]{"Proximal","Intermediate","Distal"})
                 Find("Right"+finger+joint).localRotation*=Quaternion.Euler(-open*(joint=="Intermediate"?15:6)+(finger=="Index"?stroke*3:0),0,0);
         }
+        ClearPlayingHand();
+        float neutral=1-Mathf.Max(gesture,play);
+        if(neutral>.00001f)
+        {
+            for(int i=0;i<bones.Length;i++)actionPose[i]=bones[i].localRotation;
+            RelaxedNeutral(state=="MusicIdle"?t:0);
+            for(int i=0;i<bones.Length;i++)bones[i].localRotation=Quaternion.Slerp(actionPose[i],bones[i].localRotation,neutral);
+            ClearPlayingHand();
+        }
+    }
+    void RelaxedNeutral(float time)
+    {
+        Reset();
+        float phase=time/4.8f*Mathf.PI*2;
+        float breath=.5f-.5f*Mathf.Cos(phase);
+        Rotate(Find("Spine"),Vector3.left,-.45f*breath);
+        Rotate(chest,front,.45f*Mathf.Sin(phase));
+        Rotate(chest,Vector3.left,-.35f*breath);
+        Rotate(head,Vector3.left,-2f+.3f*breath);
+        var support=Find("LeftHand");var twist=Find("LeftWristTwist");
+        var supportRotation=support.rotation;var twistRotation=twist.rotation;
+        SolveArm(support.position+Find("Yueqin_Independent").TransformVector(Vector3.down*.00034f),P(.23f,-.12f,.94f),"Left");
+        twist.rotation=twistRotation;support.rotation=supportRotation;
+        SolveArm(chest.TransformPoint(wrist)+D(-.012f,-.028f,-.052f),P(-.25f,-.12f,.91f));
+        AimHand(chest.TransformDirection(fingerDirection),chest.TransformDirection(thumbDirection));
         ClearPlayingHand();
     }
     void ClearPlayingHand()

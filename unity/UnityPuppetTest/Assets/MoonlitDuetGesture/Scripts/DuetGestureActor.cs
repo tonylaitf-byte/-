@@ -115,6 +115,8 @@ namespace PalmTheatre.DuetGestures
                     float hold=Mathf.Max(.01f,Duration-(length-(holdEnd-holdStart)));
                     float t=Elapsed<=holdStart?Elapsed:Elapsed<holdStart+hold?
                         holdStart+(Elapsed-holdStart)*(holdEnd-holdStart)/hold:holdEnd+Elapsed-holdStart-hold;
+                    if(string.Equals(CurrentLine.actionId,"Attack",StringComparison.OrdinalIgnoreCase))
+                        t=SwordDanceTiming.SampleTime(Elapsed,length,Duration);
                     action.SetTime(Mathf.Clamp(t,0,length));
                     weight=Busy?Mathf.Min(Mathf.Clamp01(Elapsed/.18f),Mathf.Clamp01((Duration-Elapsed)/.25f)):0;
                 }

@@ -1,0 +1,104 @@
+[
+  {
+    "players": 1,
+    "mode": "gesture",
+    "seconds": 15.007,
+    "browserRafFps": 119.67748384087426,
+    "cameraCallbackFps": 20.05730659025788,
+    "p95FrameMs": 8.400000000001455,
+    "pixelRatio": 1.5,
+    "canvas": [
+      1543,
+      868
+    ],
+    "preview": "VIDEO",
+    "inferenceFps": 18.991137469181048,
+    "frameRequestMedianMs": 29,
+    "frameRequestP95Ms": 36
+  },
+  {
+    "players": 1,
+    "mode": "mapping",
+    "seconds": 15.006799999952316,
+    "browserRafFps": 119.61244235984378,
+    "cameraCallbackFps": 19.99093744175662,
+    "p95FrameMs": 8.400000000001455,
+    "pixelRatio": 1.5,
+    "canvas": [
+      1543,
+      868
+    ],
+    "preview": "VIDEO",
+    "inferenceFps": 19.124663485947167,
+    "frameRequestMedianMs": 29,
+    "frameRequestP95Ms": 36
+  },
+  {
+    "players": 1,
+    "mode": "hybrid",
+    "seconds": 15.000200000047684,
+    "browserRafFps": 119.86506846537276,
+    "cameraCallbackFps": 19.999733336825265,
+    "p95FrameMs": 8.400000000001455,
+    "pixelRatio": 1.5,
+    "canvas": [
+      1543,
+      868
+    ],
+    "preview": "VIDEO",
+    "inferenceFps": 19.733070225667593,
+    "frameRequestMedianMs": 29,
+    "frameRequestP95Ms": 33
+  },
+  {
+    "players": 2,
+    "mode": "gesture",
+    "seconds": 15.019100000023842,
+    "browserRafFps": 38.950403153256275,
+    "cameraCallbackFps": 20.041147605350666,
+    "p95FrameMs": 33.399999999999636,
+    "pixelRatio": 1.5,
+    "canvas": [
+      1543,
+      868
+    ],
+    "preview": "VIDEO",
+    "inferenceFps": 16.379143890087256,
+    "frameRequestMedianMs": 29,
+    "frameRequestP95Ms": 34
+  },
+  {
+    "players": 2,
+    "mode": "mapping",
+    "seconds": 15.05830000001192,
+    "browserRafFps": 43.099154619013184,
+    "cameraCallbackFps": 19.988976179234157,
+    "p95FrameMs": 33.39999999999782,
+    "pixelRatio": 1.5,
+    "canvas": [
+      1543,
+      868
+    ],
+    "preview": "VIDEO",
+    "inferenceFps": 17.863902299714248,
+    "frameRequestMedianMs": 29,
+    "frameRequestP95Ms": 33
+  },
+  {
+    "players": 2,
+    "mode": "hybrid",
+    "seconds": 15.036300000011922,
+    "browserRafFps": 41.63258248368972,
+    "cameraCallbackFps": 20.084728290853505,
+    "p95FrameMs": 33.30000000000109,
+    "pixelRatio": 1.5,
+    "canvas": [
+      1543,
+      868
+    ],
+    "preview": "VIDEO",
+    "inferenceFps": 17.890039437879448,
+    "frameRequestMedianMs": 29,
+    "frameRequestP95Ms": 32
+  }
+]

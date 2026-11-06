@@ -1,0 +1,16 @@
+{
+    "passed": true,
+    "errors": 0,
+    "bytes": 52544599,
+    "version": "1.1",
+    "output": "C:\\Users\\User\\Desktop\\手部辨識 Unity 戲偶控制系統\\GitHubUpload\\PalmTheatre\\hand-tracking\\static\\theatre",
+    "scenes": [
+        "Assets/IntegratedTheatre/Scenes/TheatreEntry.unity",
+        "Assets/IntegratedTheatre/Scenes/SoloGesture.unity",
+        "Assets/IntegratedTheatre/Scenes/SoloMapping.unity",
+        "Assets/IntegratedTheatre/Scenes/DuetGesture.unity",
+        "Assets/IntegratedTheatre/Scenes/DuetMapping.unity",
+        "Assets/IntegratedTheatre/Scenes/SoloHybrid.unity",
+        "Assets/IntegratedTheatre/Scenes/DuetHybrid.unity"
+    ]
+}

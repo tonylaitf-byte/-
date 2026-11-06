@@ -1,0 +1,15 @@
+{
+    "passed": true,
+    "sameMeshes": true,
+    "sameBoneBindings": true,
+    "materialSwapPreservesPose": true,
+    "liveControlMoves": true,
+    "headControlMoves": true,
+    "materials": 11,
+    "testedFrames": 240,
+    "failure": "",
+    "scene": "Assets/IntegratedTheatre/Scenes/HeroRefinementPreview.unity",
+    "engineDiagnostics": [
+        "ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.\r\nParameter name: index\nSystem.Collections.Generic.List`1[T].get_Item (System.Int32 index) (at <816f70bc2a9c4332b0bd119906a8d40e>:0)\nUnityEditor.Search.SearchDatabase+<EnumerateAll>d__75.MoveNext () (at <ba40de9d2c774406a299ab488f9e8db6>:0)\nSystem.Linq.Enumerable.TryGetFirst[TSource] (System.Collections.Generic.IEnumerable`1[T] source, System.Boolean& found) (at <fe644d7ad1cf499ebe4e7ad937bc03bf>:0)\nSystem.Linq.Enumerable.First[TSource] (System.Collections.Generic.IEnumerable`1[T] source) (at <fe644d7ad1cf499ebe4e7ad937bc03bf>:0)\nUnityEditor.Search.SearchDatabase.GetDefaultSearchDatabase () (at <ba40de9d2c774406a299ab488f9e8db6>:0)\nUnityEditor.Search.SearchInit.IndexationOnStartup () (at <ba40de9d2c774406a299ab488f9e8db6>:0)\nUnityEditor.EditorApplication.Internal_CallDelayFunctions () (at <2608e8670e87477ba4f8f33d8e275d95>:0)\n"
+    ]
+}

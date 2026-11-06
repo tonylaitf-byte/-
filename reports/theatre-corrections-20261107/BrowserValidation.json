@@ -1,0 +1,51 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "players": 1,
+      "mode": "gesture",
+      "scene": "SoloGesture",
+      "actors": 1,
+      "resets": 10,
+      "input": true,
+      "pause": true,
+      "cameraRetry": true,
+      "mediaStopped": true
+    },
+    {
+      "players": 1,
+      "mode": "mapping",
+      "scene": "SoloMapping",
+      "actors": 1,
+      "resets": 10,
+      "input": true,
+      "pause": true,
+      "cameraRetry": true,
+      "mediaStopped": true
+    },
+    {
+      "players": 2,
+      "mode": "gesture",
+      "scene": "DuetGesture",
+      "actors": 2,
+      "resets": 10,
+      "input": true,
+      "pause": true,
+      "cameraRetry": true,
+      "mediaStopped": true
+    },
+    {
+      "players": 2,
+      "mode": "mapping",
+      "scene": "DuetMapping",
+      "actors": 2,
+      "resets": 10,
+      "input": true,
+      "pause": true,
+      "cameraRetry": true,
+      "mediaStopped": true
+    }
+  ],
+  "errors": [],
+  "warnings": []
+}

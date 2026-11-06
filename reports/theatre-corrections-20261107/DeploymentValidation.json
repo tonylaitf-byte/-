@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "installedFilesVerified": 43,
+  "containerSourceFilesVerified": 9,
+  "endpoints": [
+    {
+      "port": 5000,
+      "status": "ok",
+      "release": "2026-11-07-idle-camera",
+      "pageAndScriptVerified": true
+    },
+    {
+      "port": 5052,
+      "status": "ok",
+      "release": "2026-11-07-idle-camera",
+      "pageAndScriptVerified": true
+    }
+  ],
+  "windowsPowerShellLauncher": "passed"
+}

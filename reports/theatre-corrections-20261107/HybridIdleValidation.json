@@ -1,0 +1,45 @@
+{
+    "passed": true,
+    "failure": "",
+    "cases": [
+        {
+            "scene": "Assets/IntegratedTheatre/Scenes/SoloHybrid.unity",
+            "role": "俠客",
+            "idleClip": "Assets/Animations/Idle.anim",
+            "initialIdle": true,
+            "liveMapping": true,
+            "uncalibratedIdle": true,
+            "lostHandIdle": true,
+            "actionReturn": true,
+            "maximumIdleError": 0.0,
+            "breathingDegrees": 0.7610432505607605
+        },
+        {
+            "scene": "Assets/IntegratedTheatre/Scenes/DuetHybrid.unity",
+            "role": "俠客",
+            "idleClip": "Assets/Animations/Idle.anim",
+            "initialIdle": true,
+            "liveMapping": true,
+            "uncalibratedIdle": true,
+            "lostHandIdle": true,
+            "actionReturn": true,
+            "maximumIdleError": 0.0,
+            "breathingDegrees": 0.76309734582901
+        },
+        {
+            "scene": "Assets/IntegratedTheatre/Scenes/DuetHybrid.unity",
+            "role": "琴師",
+            "idleClip": "Assets/YueXian/ActionTest/Animations/MusicIdle.anim",
+            "initialIdle": true,
+            "liveMapping": true,
+            "uncalibratedIdle": true,
+            "lostHandIdle": true,
+            "actionReturn": true,
+            "maximumIdleError": 0.0,
+            "breathingDegrees": 0.8740144968032837
+        }
+    ],
+    "engineDiagnostics": [
+        "ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.\r\nParameter name: index\nSystem.Collections.Generic.List`1[T].get_Item (System.Int32 index) (at <816f70bc2a9c4332b0bd119906a8d40e>:0)\nUnityEditor.Search.SearchDatabase+<EnumerateAll>d__76.MoveNext () (at <62b4de64a41f441d820235b9258b7895>:0)\nSystem.Linq.Enumerable.TryGetFirst[TSource] (System.Collections.Generic.IEnumerable`1[T] source, System.Boolean& found) (at <fe644d7ad1cf499ebe4e7ad937bc03bf>:0)\nSystem.Linq.Enumerable.First[TSource] (System.Collections.Generic.IEnumerable`1[T] source) (at <fe644d7ad1cf499ebe4e7ad937bc03bf>:0)\nUnityEditor.Search.SearchDatabase.GetDefaultSearchDatabase () (at <62b4de64a41f441d820235b9258b7895>:0)\nUnityEditor.Search.SearchInit.IndexationOnStartup () (at <62b4de64a41f441d820235b9258b7895>:0)\nUnityEditor.EditorApplication.Internal_CallDelayFunctions () (at <f61864b98d514a7796d400c6975fc870>:0)\n"
+    ]
+}

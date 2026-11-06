@@ -1,0 +1,41 @@
+{
+    "passed": true,
+    "scenes": [
+        {
+            "scene": "Assets/IntegratedTheatre/Scenes/SoloGesture.unity",
+            "listeners": 1,
+            "banquetRenderers": 28,
+            "heroBindings": 3
+        },
+        {
+            "scene": "Assets/IntegratedTheatre/Scenes/SoloMapping.unity",
+            "listeners": 1,
+            "banquetRenderers": 28,
+            "heroBindings": 3
+        },
+        {
+            "scene": "Assets/IntegratedTheatre/Scenes/DuetGesture.unity",
+            "listeners": 1,
+            "banquetRenderers": 28,
+            "heroBindings": 3
+        },
+        {
+            "scene": "Assets/IntegratedTheatre/Scenes/DuetMapping.unity",
+            "listeners": 1,
+            "banquetRenderers": 28,
+            "heroBindings": 3
+        },
+        {
+            "scene": "Assets/IntegratedTheatre/Scenes/SoloHybrid.unity",
+            "listeners": 1,
+            "banquetRenderers": 28,
+            "heroBindings": 3
+        },
+        {
+            "scene": "Assets/IntegratedTheatre/Scenes/DuetHybrid.unity",
+            "listeners": 1,
+            "banquetRenderers": 28,
+            "heroBindings": 3
+        }
+    ]
+}

@@ -1,0 +1,15 @@
+{
+    "passed": true,
+    "errors": 0,
+    "bytes": 49996870,
+    "output": "C:\\Users\\Detion0\\Documents\\Codex\\2026-07-08\\new-chat\\PalmTheatreHybrid\\hand-tracking\\static/theatre",
+    "scenes": [
+        "Assets/IntegratedTheatre/Scenes/TheatreEntry.unity",
+        "Assets/IntegratedTheatre/Scenes/SoloGesture.unity",
+        "Assets/IntegratedTheatre/Scenes/SoloMapping.unity",
+        "Assets/IntegratedTheatre/Scenes/DuetGesture.unity",
+        "Assets/IntegratedTheatre/Scenes/DuetMapping.unity",
+        "Assets/IntegratedTheatre/Scenes/SoloHybrid.unity",
+        "Assets/IntegratedTheatre/Scenes/DuetHybrid.unity"
+    ]
+}

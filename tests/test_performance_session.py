@@ -118,6 +118,49 @@ class PerformanceTest(unittest.TestCase):
                 self.assertIn('id="unity-canvas"', page.get_data(as_text=True))
                 self.assertIn('id="preview"', page.get_data(as_text=True))
 
+    def test_old_camera_frames_cannot_resume_after_switch(self):
+        image = cv2.imencode('.jpg', np.full((120, 160, 3), 120, np.uint8))[1].tobytes()
+        for players in (1, 2):
+            for mode in ('gesture', 'mapping', 'hybrid'):
+                session, headers = self.start(players, mode)
+                first = {**headers, 'X-Camera-Generation': '0', 'Accept': 'application/json'}
+                self.assertEqual(self.client.post('/frame', data=image, content_type='image/jpeg', headers=first).status_code, 200)
+                stopped = self.client.post('/performance/input-stop', headers=headers, json={'cameraGeneration': 0})
+                self.assertEqual(stopped.get_json()['cameraGeneration'], 1)
+                self.assertEqual(self.client.post('/frame', data=image, content_type='image/jpeg', headers=first).status_code, 410)
+                self.assertEqual(self.client.post('/frame', data=image, content_type='image/jpeg', headers=headers).status_code, 410)
+                current = {**headers, 'X-Camera-Generation': '1', 'Accept': 'application/json'}
+                self.assertEqual(self.client.post('/frame', data=image, content_type='image/jpeg', headers=current).status_code, 200)
+                self.assertEqual(self.client.post('/performance/input-stop', headers=headers, json={'cameraGeneration': 0}).status_code, 410)
+                self.assertEqual(self.client.get('/performance/state', headers=headers).get_json()['cameraGeneration'], 1)
+                self.assertEqual(service.performance['sessionId'], session['sessionId'])
+
+
+    def test_camera_switch_preserves_calibration_revision_and_discards_both_old_inputs(self):
+        image = cv2.imencode('.jpg', np.full((120,160,3),120,np.uint8))[1].tobytes()
+        for players in (1,2):
+            for mode in ('mapping','hybrid'):
+                _, headers = self.start(players,mode)
+                self.client.post('/performance/calibrate',headers=headers,json={'side':'left'})
+                stopped = self.client.post('/performance/input-stop',headers=headers,json={'cameraGeneration':0})
+                self.assertEqual(stopped.get_json()['cameraGeneration'],1)
+                snapshot = self.client.get('/performance/state',headers=headers).get_json()
+                self.assertEqual(snapshot['calibrationRevision'],1)
+                compact = {**headers,'Accept':'application/json','X-Camera-Generation':'1'}
+                with patch.object(service,'process_browser_frame',return_value=[]) as process:
+                    stale = self.client.post('/frame',headers={**compact,'X-Calibration-Revision':'0'},data=image).get_json()
+                    self.assertTrue(stale['discardedFrame'])
+                    process.assert_not_called()
+                    self.assertEqual(self.client.post('/frame',headers={**compact,'X-Camera-Generation':'0','X-Calibration-Revision':'1'},data=image).status_code,410)
+                    process.assert_not_called()
+                    self.assertEqual(self.client.post('/frame',headers={**compact,'X-Calibration-Revision':'1'},data=image).status_code,200)
+                    process.assert_called_once()
+
+    def test_invalid_camera_generation_does_not_reset_input(self):
+        _, headers = self.start(1,'hybrid')
+        for value in (True,-1,'0',None,[]):
+            self.assertEqual(self.client.post('/performance/input-stop',headers=headers,json={'cameraGeneration':value}).status_code,400)
+            self.assertEqual(service.performance['cameraGeneration'],0)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

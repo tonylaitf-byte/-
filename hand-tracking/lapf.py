@@ -9,6 +9,7 @@ os.environ.setdefault("MPLCONFIGDIR", os.path.join(os.path.dirname(__file__), ".
 
 import mediapipe as mp
 from flask import Flask, Response, jsonify
+from api_input import install_json_errors, json_object
 
 from puppet_controls import (
     CONTROL_DEFAULTS,
@@ -18,6 +19,7 @@ from puppet_controls import (
 
 
 app = Flask(__name__)
+install_json_errors(app)
 
 mp_hands = mp.solutions.hands
 model_complexity = max(0, min(1, int(os.environ.get("HAND_MODEL_COMPLEXITY", "1"))))
@@ -304,6 +306,7 @@ def camera_thread():
                     controls = pipeline.update(
                         hand_landmarks.landmark,
                         timestamp=frame_timestamp,
+                        frame_size=(frame.shape[1], frame.shape[0]),
                     )
                     calibrated = pipeline.calibrated
                     calibration_progress = pipeline.calibration_progress
@@ -466,6 +469,7 @@ def health():
 
 @app.route("/calibrate", methods=["POST"])
 def calibrate():
+    json_object(allow_empty=True)
     with pipeline_lock:
         pipeline.reset_calibration()
     set_puppet_state(False, CONTROL_DEFAULTS)

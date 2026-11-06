@@ -1,0 +1,67 @@
+{
+  "passed": true,
+  "method": "Installed phone webcam (DroidCam/Camo)",
+  "cases": [
+    {
+      "players": 1,
+      "mode": "gesture",
+      "localCamera": true,
+      "droidCamSelected": true,
+      "camoSelected": true,
+      "oldStreamsReleased": true,
+      "samePerformance": true
+    },
+    {
+      "players": 1,
+      "mode": "mapping",
+      "localCamera": true,
+      "droidCamSelected": true,
+      "camoSelected": true,
+      "oldStreamsReleased": true,
+      "samePerformance": true
+    },
+    {
+      "players": 1,
+      "mode": "hybrid",
+      "localCamera": true,
+      "droidCamSelected": true,
+      "camoSelected": true,
+      "oldStreamsReleased": true,
+      "samePerformance": true
+    },
+    {
+      "players": 2,
+      "mode": "gesture",
+      "localCamera": true,
+      "droidCamSelected": true,
+      "camoSelected": true,
+      "oldStreamsReleased": true,
+      "samePerformance": true
+    },
+    {
+      "players": 2,
+      "mode": "mapping",
+      "localCamera": true,
+      "droidCamSelected": true,
+      "camoSelected": true,
+      "oldStreamsReleased": true,
+      "samePerformance": true
+    },
+    {
+      "players": 2,
+      "mode": "hybrid",
+      "localCamera": true,
+      "droidCamSelected": true,
+      "camoSelected": true,
+      "oldStreamsReleased": true,
+      "samePerformance": true
+    }
+  ],
+  "missingPhoneDoesNotUseLaptop": true,
+  "unknownNameManualSelection": true,
+  "deviceReconnect": true,
+  "permissionRetry": true,
+  "mobileLayout": true,
+  "runtimeErrors": [],
+  "physicalPhoneTested": false
+}

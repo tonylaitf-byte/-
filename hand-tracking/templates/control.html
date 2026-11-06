@@ -17,6 +17,10 @@
       </section>
       <aside class="recognition-panel" aria-label="攝影機與辨識區">
         <div class="panel-heading"><h2>手部辨識</h2><span class="small-label" id="camera-status" role="status">鏡頭未開啟</span></div>
+        <label class="camera-field">鏡頭來源<select id="camera-source" disabled><option value="device">本機鏡頭</option><option value="phone">手機鏡頭（DroidCam／Camo）</option></select></label>
+        <div class="camera-device-row"><label class="camera-field"><span id="camera-device-label">選擇本機鏡頭</span><select id="camera-device" disabled><option value="">預設鏡頭</option></select></label><button id="refresh-cameras" disabled>重新偵測</button></div>
+        <div class="phone-camera-help" id="phone-camera-help" hidden><strong>透過 DroidCam／Camo 連接手機</strong><p>先在手機與電腦開啟已安裝的攝影機軟體，完成 USB 或 Wi-Fi 連線，再從上方選擇對應的手機鏡頭。</p><p>清單沒有出現時，按「重新偵測」。若軟體使用其他裝置名稱，也可從「其他鏡頭」手動選取。</p></div>
+        <p class="camera-device-name" id="camera-device-name" role="status"></p>
         <div class="camera-preview"><video id="preview" autoplay muted playsinline aria-label="即時攝影機畫面"></video><canvas id="hand-overlay" width="640" height="480" aria-label="手部辨識骨架"></canvas><div class="camera-empty" id="camera-empty"><span aria-hidden="true">◎</span><p id="camera-message">舞台載入後啟動攝影機</p></div><div class="zone-labels" id="zone-labels" hidden><span>左 · 俠客</span><span>右 · 琴師</span></div></div>
         <p class="camera-metrics" id="camera-metrics">鏡頭未開啟</p>
         <button id="camera-button" class="camera-button" disabled>開啟鏡頭</button>

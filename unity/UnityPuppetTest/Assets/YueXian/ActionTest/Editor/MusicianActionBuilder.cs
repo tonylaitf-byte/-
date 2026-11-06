@@ -14,7 +14,7 @@ public static class MusicianActionBuilder
     public const string Base="Assets/YueXian/ActionTest";
     public const string ScenePath=Base+"/Scenes/YueXianActionTest.unity";
     static readonly string[] States={"MusicIdle","Greeting","SlowIntro","SlowLoop","Pause","Challenge","FastIntro","FastLoop","FastExit"};
-    static readonly float[] Lengths={2,3.6f,3.6f,1.8f,4.2f,4.5f,3.5f,1,1};
+    static readonly float[] Lengths={4.8f,3.6f,3.6f,1.8f,4.2f,4.5f,3.5f,1,1};
     [MenuItem("掌中智戲/琴師動作/建立五動作測試場景")]
     public static void Build()
     {
@@ -137,6 +137,22 @@ public static class MusicianActionBuilder
         EditorSceneManager.SaveScene(scene);AssetDatabase.SaveAssets();
         Debug.Log("PLAYING_CLEARANCE_REBUILT");
         MusicianClearanceAudit.Run();
+    }
+    public static void RebuildRelaxedIdleTransitions()
+    {
+        // Use the original skeleton and the installed, clearance-corrected prop.
+        // Re-bake the neutral endpoints as well as idle, retaining every GUID.
+        EditorSceneManager.OpenScene("Assets/YueXian/Scenes/YueXianPreview.unity");
+        var model=UnityEngine.Object.FindAnyObjectByType<YueXianPerformance>().humanoidAnimator.transform;
+        var prefab=AssetDatabase.LoadAssetAtPath<GameObject>(Base+"/Prefabs/YueXianActionActor.prefab");
+        var source=prefab.GetComponentsInChildren<Transform>(true).First(t=>t.name=="Yueqin_Independent");
+        var prop=model.GetComponentsInChildren<Transform>(true).First(t=>t.name=="Yueqin_Independent");
+        prop.SetLocalPositionAndRotation(source.localPosition,source.localRotation);
+        var meshes=source.GetComponentsInChildren<MeshFilter>().ToDictionary(f=>f.name,f=>f.sharedMesh);
+        foreach(var filter in prop.GetComponentsInChildren<MeshFilter>())filter.sharedMesh=meshes[filter.name];
+        var author=new MusicianPoseAuthor(model);
+        for(int i=0;i<States.Length;i++)Bake(author,model,States[i],Lengths[i],States[i].EndsWith("Loop")||States[i]=="MusicIdle");
+        author.Reset();AssetDatabase.SaveAssets();
     }
     static AnimationClip Bake(MusicianPoseAuthor author,Transform model,string state,float length,bool loop)
     {
