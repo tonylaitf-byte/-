@@ -87,7 +87,18 @@ public static class MusicianActionBuilder
         if(existing){EditorUtility.CopySerialized(value,existing);UnityEngine.Object.DestroyImmediate(value);EditorUtility.SetDirty(existing);}
         else AssetDatabase.CreateAsset(value,path);
     }
-    static void AdjustPlayingInstrument(Transform model)
+    public static void RebuildGestureClips()
+    {
+        EditorSceneManager.OpenScene("Assets/YueXian/Scenes/YueXianPreview.unity");
+        var animator=UnityEngine.Object.FindAnyObjectByType<YueXianPerformance>().humanoidAnimator;
+        AdjustPlayingInstrument(animator.transform, false);
+        var author=new MusicianPoseAuthor(animator.transform);
+        for(int i=1;i<States.Length;i++)
+            Bake(author,animator.transform,States[i],Lengths[i],States[i].EndsWith("Loop"));
+        author.Reset();
+        AssetDatabase.SaveAssets();
+    }
+    static void AdjustPlayingInstrument(Transform model, bool updateMeshes=true)
     {
         var transforms=model.GetComponentsInChildren<Transform>(true);
         var prop=transforms.First(t=>t.name=="Yueqin_Independent");
@@ -95,7 +106,7 @@ public static class MusicianActionBuilder
         // Tilt around the supporting fingers, keeping the neck anchored.
         prop.RotateAround(grip.position,Vector3.right,-4f);
         prop.position+=Vector3.forward*.002f;
-        Directory.CreateDirectory(Base+"/Meshes");AssetDatabase.Refresh();
+        if(updateMeshes){Directory.CreateDirectory(Base+"/Meshes");AssetDatabase.Refresh();}
         foreach(var filter in prop.GetComponentsInChildren<MeshFilter>())
         {
             string name=filter.name;
@@ -112,8 +123,12 @@ public static class MusicianActionBuilder
                 vertices[i]=filter.transform.InverseTransformPoint(prop.TransformPoint(p));
             }
             mesh.vertices=vertices;mesh.RecalculateNormals();mesh.RecalculateBounds();
-            string path=Base+"/Meshes/"+mesh.name+".asset";Save(mesh,path);
-            filter.sharedMesh=AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if(updateMeshes)
+            {
+                string path=Base+"/Meshes/"+mesh.name+".asset";Save(mesh,path);
+                filter.sharedMesh=AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            }
+            else filter.sharedMesh=mesh;
         }
     }
     public static void RebuildPlayingClearance()

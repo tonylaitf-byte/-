@@ -2,6 +2,10 @@
 
 ## 本次版本
 
+本次組員交付快照納入下列 11/6、11/7 的本機修改、已建置 WebGL、Unity 場景、美術來源與 Blender 展示檔。下文「尚未推送」描述各次工作完成當時的狀態；交付以 `codex/hybrid-stability-20261025` 的實際提交為準，不變更 `main`。套件提供 Docker 建置來源，並非預先匯出的容器映像。
+
+- 2026-11-07 本機追加手勢動畫修整與左手持劍出招，重新建置 WebGL；未提交／推送。建置及回歸記錄見 `reports/motion-gesture-refined/`。
+- 2026-11-06 本機追加校正修正與正式場景美術整合，WebGL 已重新建置；這批變更尚未提交／推送，不應再以 `af94ff7` 當作目前本機成品的完整版本標識。建置記錄見 `reports/production-art/Build.json`。
 - 儲存庫：https://github.com/tonylaitf-byte/-
 - 基準：`0497210`。
 - 工作分支：`codex/hybrid-stability-20261025`。

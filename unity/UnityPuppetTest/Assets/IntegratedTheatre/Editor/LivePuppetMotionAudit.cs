@@ -83,7 +83,7 @@ public static class LivePuppetMotionAudit
     {
         EditorSceneManager.OpenScene(HybridTheatreBuilder.DuetScene);
         SessionState.SetBool(Pending, true);
-        EditorApplication.EnterPlaymode();
+        EditorPlayModeStartup.EnterAfterInitialization();
     }
     [InitializeOnLoadMethod] static void Resume()
     {

@@ -1,0 +1,49 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "players": 1,
+      "mode": "gesture",
+      "responseDelayMs": 40,
+      "visibleOverlayBeforeCalibration": true,
+      "frameResponses": 1
+    },
+    {
+      "players": 1,
+      "mode": "mapping",
+      "responseDelayMs": 40,
+      "visibleOverlayBeforeCalibration": true,
+      "frameResponses": 1
+    },
+    {
+      "players": 1,
+      "mode": "hybrid",
+      "responseDelayMs": 500,
+      "visibleOverlayBeforeCalibration": true,
+      "frameResponses": 1
+    },
+    {
+      "players": 2,
+      "mode": "gesture",
+      "responseDelayMs": 40,
+      "visibleOverlayBeforeCalibration": true,
+      "frameResponses": 1
+    },
+    {
+      "players": 2,
+      "mode": "mapping",
+      "responseDelayMs": 40,
+      "visibleOverlayBeforeCalibration": true,
+      "frameResponses": 1
+    },
+    {
+      "players": 2,
+      "mode": "hybrid",
+      "responseDelayMs": 500,
+      "visibleOverlayBeforeCalibration": true,
+      "frameResponses": 1
+    }
+  ],
+  "errors": [],
+  "scope": "Actual page/CSS/Worker with fake camera, mocked API landmarks and Unity loader. Not actual MediaPipe, camera or Unity performance validation."
+}

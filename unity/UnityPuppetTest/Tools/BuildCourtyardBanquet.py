@@ -209,18 +209,20 @@ def cloth_cover(name, height, radius, parent):
 
 banquet = empty('Courtyard Banquet Assembly')
 table = empty('Low Table', parent=banquet)
+# Double the previous .4375 m tabletop height, keeping the feet on the mat.
+TABLE_RAISE = .4975
 for i in range(5):
-    cube('Table top plank %02d' % i, (0, -.52+i*.26, .34), (2.16, .256, .075), wood, .012, table)
+    cube('Table top plank %02d' % i, (0, -.52+i*.26, .34+TABLE_RAISE), (2.16, .256, .075), wood, .012, table)
 for x in (-.96,.96):
-    cube('Table rim', (x,0,.31), (.055,1.35,.12), wood, .008, table)
+    cube('Table rim', (x,0,.31+TABLE_RAISE), (.055,1.35,.12), wood, .008, table)
 for y in (-.60,.60):
-    cube('Carved apron rail', (0,y,.24), (1.95,.055,.13), wood, .012, table)
-    cube('Apron inset', (0,y*1.02,.24), (1.7,.015,.045), edge, .007, table)
+    cube('Carved apron rail', (0,y,.24+TABLE_RAISE), (1.95,.055,.13), wood, .012, table)
+    cube('Apron inset', (0,y*1.02,.24+TABLE_RAISE), (1.7,.015,.045), edge, .007, table)
 for x in (-.88,.88):
     for y in (-.48,.48):
-        cube('Short table foot', (x,y,.15), (.14,.14,.28), wood, .015, table)
+        cube('Short table foot', (x,y,.15+TABLE_RAISE/2), (.14,.14,.28+TABLE_RAISE), wood, .015, table)
 for x in (-.88,.88):
-    cube('Side stretcher', (x,0,.10), (.07,1.02,.055), wood, .006, table)
+    cube('Side stretcher', (x,0,.10+TABLE_RAISE/2), (.07,1.02,.055), wood, .006, table)
 
 def mat(name, x, y, width, depth, base, raised=False):
     group = empty(name, (x,y,base), banquet)
@@ -240,7 +242,7 @@ mat('Large Banquet Floor Mat',0,0,4.25,1.8,.0)
 mat('Left Kneeling Mat',-1.6,0,.77,1.25,.026,True)
 mat('Right Kneeling Mat',1.6,0,.77,1.25,.026,True)
 
-top=.385
+top=.385+TABLE_RAISE
 def plate(name,x,y,radius=.19):
     return lathe(name,(x,y,top),[(0,0),(.07,.0),(radius,.018),(radius,.045),(radius-.018,.045),(.08,.018),(0,.018)],ivory,banquet)
 def cup(name,x,y):

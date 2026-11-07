@@ -55,6 +55,17 @@ CONTROL_GAINS = {
     "bodyLean": 1.0,
 }
 
+# Raw control-space spread, independent of performance sensitivity. Monocular
+# depth needs more tolerance than image-plane movement during neutral capture.
+CALIBRATION_SPREAD_LIMITS = {
+    "leftHandX": .08, "leftHandY": .08, "leftHandZ": .08,
+    "rightHandX": .08, "rightHandY": .08, "rightHandZ": .08,
+    "leftArm": .10, "rightArm": .09,
+    "headPitch": .10, "headYaw": .10, "headRoll": .07,
+    "bodyX": .04, "bodyY": .04, "bodyDepth": .06,
+    "bodyTurn": .12, "bodyLean": .12, "headNod": .12,
+}
+
 # Small dead zones remove landmark tremor. Exponents below 1 amplify comfortable
 # finger motion and palm-center gestures, with a stronger curve for the pinky.
 CONTROL_RESPONSE = {
@@ -311,8 +322,15 @@ def controls_from_landmarks(landmarks, frame_size=None):
 
 
 class NeutralPoseCalibrator:
+    loss_grace = .25
+    max_sample_gap = .65
+
     def __init__(self, samples_required=45):
         self.samples_required = max(1, int(samples_required))
+        # Preserve the requested 30-FPS hold duration without forcing slower
+        # detectors to collect 45 frames. Still require enough observations.
+        self.minimum_samples = min(self.samples_required, 12)
+        self.stable_duration = (self.samples_required - 1) / 30.0
         self.reset()
 
     @property
@@ -323,21 +341,33 @@ class NeutralPoseCalibrator:
     def progress(self):
         if self.calibrated:
             return 1.0
-        count_progress = len(self._samples) / self.samples_required
-        duration = (self.samples_required - 1) / 30.0
-        time_progress = ((self._last_time - self._start_time) / duration
-                         if duration and self._samples else 1.0)
-        return min(count_progress, max(1.0 / self.samples_required, time_progress))
+        if not self._samples:
+            return 0.0
+        count_progress = len(self._samples) / self.minimum_samples
+        time_progress = self._stable_time / self.stable_duration if self.stable_duration else 1.0
+        return min(1.0, count_progress, max(1.0 / self.minimum_samples, time_progress))
 
     def reset(self):
         self._samples = []
         self._baseline = None
-        self._start_time = None
         self._last_time = None
+        self._last_good_time = None
+        self._stable_time = 0.0
+        self._paused = False
+        self._missing = False
+        self._rejected = 0
+        self._rejected_total = 0
 
-    def interrupt(self):
-        if not self.calibrated:
+    def interrupt(self, timestamp=None):
+        if self.calibrated or not self._samples:
+            return
+        now = time.monotonic() if timestamp is None else float(timestamp)
+        if (not math.isfinite(now) or now < self._last_time or
+                now - self._last_good_time > self.loss_grace):
             self.reset()
+            return
+        self._last_time = now
+        self._paused = self._missing = True
 
     def observe(self, raw_controls, timestamp=None):
         if self.calibrated:
@@ -348,27 +378,38 @@ class NeutralPoseCalibrator:
         if not math.isfinite(now) or not all(math.isfinite(v) for v in sample.values()):
             self.reset()
             return
-        if self._last_time is not None and not 0 <= now - self._last_time <= .35:
+        if self._last_time is not None and not 0 <= now - self._last_time <= self.max_sample_gap:
             self.reset()
-        # Bound the full window's spread, so slow drift cannot accumulate into
-        # a false neutral pose. Thresholds are expressed after control gain.
+        if self._missing and now - self._last_good_time > self.loss_grace:
+            self.reset()
+        # Keep the full accepted window bounded so gradual movement cannot
+        # become neutral. A rare rejected sample never enters the baseline.
         if self._samples and any(
             (max(sample[key], max(s[key] for s in self._samples))
              - min(sample[key], min(s[key] for s in self._samples)))
-            * CONTROL_GAINS.get(key, 1.0) > .12 for key in sample
+            > CALIBRATION_SPREAD_LIMITS[key] for key in sample
         ):
+            self._rejected += 1
+            self._rejected_total += 1
+            self._paused = True
+            self._last_time = now
+            if (self._rejected <= 2 and now - self._last_good_time <= self.loss_grace and
+                    self._rejected_total <= max(2, int(len(self._samples) * .15))):
+                return
             self.reset()
-        if not self._samples:
-            self._start_time = now
+        if self._last_time is not None and not self._paused:
+            self._stable_time += now - self._last_time
+        self._paused = self._missing = False
+        self._rejected = 0
         self._last_time = now
+        self._last_good_time = now
         self._samples.append(sample)
-        # Keep memory bounded at high capture rates while retaining the window
-        # start and full extrema until calibration completes.
+        # Keep memory bounded while retaining the full accepted window.
         if len(self._samples) > self.samples_required * 8:
             self.reset()
             return
-        if (len(self._samples) >= self.samples_required
-                and now - self._start_time + 1e-9 >= (self.samples_required - 1) / 30.0):
+        if (len(self._samples) >= self.minimum_samples
+                and self._stable_time + 1e-9 >= self.stable_duration):
             self._baseline = {
                 key: statistics.median(sample[key] for sample in self._samples)
                 for key in CALIBRATED_KEYS
@@ -558,7 +599,7 @@ class PuppetControlPipeline:
         return self.smoother.update(calibrated)
 
     def no_hand(self, timestamp=None):
-        self.calibrator.interrupt()
+        self.calibrator.interrupt(timestamp)
         if isinstance(self.smoother, AdaptiveControlSmoother):
             return self.smoother.update(CONTROL_DEFAULTS, timestamp=timestamp)
         return self.smoother.update(CONTROL_DEFAULTS)

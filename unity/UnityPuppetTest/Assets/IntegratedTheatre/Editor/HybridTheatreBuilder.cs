@@ -158,7 +158,7 @@ public static class HybridTheatreBuilder
             case "DRINK": return HybridBodyPart.Pelvis | HybridBodyPart.Torso | HybridBodyPart.Head | HybridBodyPart.RightArm;
             case "LANDSCAPE": return HybridBodyPart.Torso | HybridBodyPart.Head | HybridBodyPart.RightArm;
             case "ALERT": return HybridBodyPart.Torso | HybridBodyPart.Head | HybridBodyPart.LeftArm;
-            case "ATTACK": return HybridBodyPart.Torso | HybridBodyPart.RightArm;
+            case "ATTACK": return HybridBodyPart.Torso | HybridBodyPart.Head | HybridBodyPart.LeftArm;
             default: throw new ArgumentException("Unknown hybrid action: " + id);
         }
     }

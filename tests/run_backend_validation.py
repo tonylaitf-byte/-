@@ -13,6 +13,7 @@ suite = unittest.TestSuite([
     loader.loadTestsFromName('test_hybrid_mode'),
     loader.loadTestsFromName('test_coordinate_aspect'),
     loader.loadTestsFromName('test_tracking_stability'),
+    loader.loadTestsFromName('test_initial_calibration'),
     loader.loadTestsFromName('test_api_input'),
 ])
 result = unittest.TextTestRunner(verbosity=1).run(suite)

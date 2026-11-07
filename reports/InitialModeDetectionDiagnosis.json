@@ -1,0 +1,111 @@
+{
+  "passed": true,
+  "scope": "Real Flask first-frame route with mocked detector output. No actual image recognition, browser, Unity or camera validation.",
+  "cases": [
+    {
+      "players": 1,
+      "mode": "gesture",
+      "status": 200,
+      "detectorCalls": 1,
+      "landmarkHandsOnFirstFrame": 1,
+      "landmarksPerHand": [
+        21
+      ],
+      "handDetected": [
+        true
+      ],
+      "calibrated": [
+        true
+      ]
+    },
+    {
+      "players": 1,
+      "mode": "mapping",
+      "status": 200,
+      "detectorCalls": 1,
+      "landmarkHandsOnFirstFrame": 1,
+      "landmarksPerHand": [
+        21
+      ],
+      "handDetected": [
+        true
+      ],
+      "calibrated": [
+        false
+      ]
+    },
+    {
+      "players": 1,
+      "mode": "hybrid",
+      "status": 200,
+      "detectorCalls": 1,
+      "landmarkHandsOnFirstFrame": 1,
+      "landmarksPerHand": [
+        21
+      ],
+      "handDetected": [
+        true
+      ],
+      "calibrated": [
+        false
+      ]
+    },
+    {
+      "players": 2,
+      "mode": "gesture",
+      "status": 200,
+      "detectorCalls": 1,
+      "landmarkHandsOnFirstFrame": 2,
+      "landmarksPerHand": [
+        21,
+        21
+      ],
+      "handDetected": [
+        true,
+        true
+      ],
+      "calibrated": [
+        null,
+        null
+      ]
+    },
+    {
+      "players": 2,
+      "mode": "mapping",
+      "status": 200,
+      "detectorCalls": 1,
+      "landmarkHandsOnFirstFrame": 2,
+      "landmarksPerHand": [
+        21,
+        21
+      ],
+      "handDetected": [
+        true,
+        true
+      ],
+      "calibrated": [
+        false,
+        false
+      ]
+    },
+    {
+      "players": 2,
+      "mode": "hybrid",
+      "status": 200,
+      "detectorCalls": 1,
+      "landmarkHandsOnFirstFrame": 2,
+      "landmarksPerHand": [
+        21,
+        21
+      ],
+      "handDetected": [
+        true,
+        true
+      ],
+      "calibrated": [
+        false,
+        false
+      ]
+    }
+  ]
+}

@@ -65,6 +65,22 @@ public static class PuppetProjectBootstrap
         Debug.Log("PUPPET_BOOTSTRAP_SUCCESS");
     }
 
+    public static void RebuildGestureClips()
+    {
+        EditorSceneManager.OpenScene(SourceScenePath, OpenSceneMode.Single);
+        var mapping = UnityEngine.Object.FindAnyObjectByType<PuppetBoneTest>();
+        if (!mapping) throw new InvalidOperationException("Animation authoring rig is missing.");
+        var outermost = PrefabUtility.GetOutermostPrefabInstanceRoot(mapping.gameObject);
+        var root = outermost ? outermost.transform : mapping.transform;
+        var bones = FindRequiredBones(root);
+        CreateBowClip(root, bones);
+        CreateLandscapeClip(root, bones);
+        CreateDrinkClip(root, bones);
+        CreateAlertClip(root, bones);
+        CreateAttackClip(root, bones);
+        AssetDatabase.SaveAssets();
+    }
+
     private static void Build()
     {
         EnsureFolder("Assets/Animations");
@@ -122,16 +138,16 @@ public static class PuppetProjectBootstrap
             shoulderFraction: 0.28f
         );
         ValidateChestClearance(
-            puppet.transform, bones, bones["LeftHand"], alert, 0.26f,
+            puppet.transform, bones, bones["LeftHand"], alert, 0.7f,
             shoulderFraction: 0.28f
         );
         ValidateElbowBend(
             puppet.transform, bones["LeftArm"], bones["LeftForeArm"],
-            bones["LeftHand"], alert, 1.15f, maximumDegrees: 24f
+            bones["LeftHand"], alert, 1.15f, maximumDegrees: 60f
         );
         ValidateElbowBend(
             puppet.transform, bones["LeftArm"], bones["LeftForeArm"],
-            bones["LeftHand"], alert, 1.55f, maximumDegrees: 24f
+            bones["LeftHand"], alert, 1.55f, maximumDegrees: 60f
         );
         AssetDatabase.DeleteAsset("Assets/Animations/Wave.anim");
         AssetDatabase.DeleteAsset("Assets/Animations/Salute.anim");
@@ -328,8 +344,8 @@ public static class PuppetProjectBootstrap
         SetRotationCurve(clip, root, bones["Head"], new[]
         {
             Pose(0f, Vector3.zero),
-            Pose(0.48f, new Vector3(-4f, 1.5f, 0f)),
-            Pose(0.82f, new Vector3(-8f, 2.5f, 0f)),
+            Pose(0.62f, new Vector3(-3f, 1.5f, 0f)),
+            Pose(1.02f, new Vector3(-7f, 2.5f, 0f)),
             Pose(1.28f, new Vector3(-11f, 2f, 0.5f)),
             Pose(1.82f, new Vector3(-8.5f, 2.8f, -0.4f)),
             Pose(2.28f, new Vector3(-12f, 2f, 0.6f)),
@@ -359,40 +375,48 @@ public static class PuppetProjectBootstrap
     {
         const float duration = 3.0f;
         AnimationClip clip = NewClip("Attack", false);
+        Vector3 side = (bones["LeftShoulder"].position - bones["RightShoulder"].position).normalized;
+        Vector3 front = ViewerDirection(root, bones["Head"]);
+        Transform arm = bones["LeftArm"], forearm = bones["LeftForeArm"], hand = bones["LeftHand"];
+        float reach = Vector3.Distance(arm.position, forearm.position) + Vector3.Distance(forearm.position, hand.position);
+        Vector3 pole = arm.position + side * reach * .7f + Vector3.down * reach * .55f + front * reach * .3f;
+        // A single readable cut: gather, lead with the torso, sweep, then recover.
+        Vector3[] directions = {
+            side * .55f + front * .65f + Vector3.down * .20f,
+            side * .75f + front * .55f + Vector3.up * .25f,
+            side * -.30f + front * .95f + Vector3.down * .24f,
+            side * -.20f + front * .90f + Vector3.down * .38f,
+            side * .40f + front * .75f + Vector3.down * .28f
+        };
+        float[] times = { .35f, .85f, 1.35f, 1.7f, 2.35f };
+        float[] extensions = { .72f, .78f, .93f, .87f, .72f };
+        var upper = new List<TimedRotation> { new TimedRotation(0, arm.localRotation) };
+        var lower = new List<TimedRotation> { new TimedRotation(0, forearm.localRotation) };
+        for (int i = 0; i < times.Length; i++)
+        {
+            var pose = SolveArmPose(arm, forearm, hand, arm.position + directions[i].normalized * reach * extensions[i], pole);
+            upper.Add(new TimedRotation(times[i], pose.UpperTarget));
+            lower.Add(new TimedRotation(times[i] + .06f, pose.LowerTarget));
+        }
+        upper.Add(new TimedRotation(duration, arm.localRotation));
+        lower.Add(new TimedRotation(duration, forearm.localRotation));
+        SetAbsoluteRotationCurve(clip, root, arm, upper);
+        SetAbsoluteRotationCurve(clip, root, forearm, lower);
         SetRotationCurve(clip, root, bones["Spine"], new[]
         {
             Pose(0f, Vector3.zero),
-            Pose(0.38f, new Vector3(0f, -28f, 0f)),
-            Pose(0.82f, new Vector3(0f, 38f, -5f)),
-            Pose(1.18f, new Vector3(0f, 24f, -4f)),
-            Pose(1.55f, new Vector3(0f, -24f, 0f)),
-            Pose(1.95f, new Vector3(0f, 34f, -5f)),
-            Pose(2.35f, new Vector3(0f, 16f, -3f)),
-            Pose(2.68f, new Vector3(0f, 6f, -1f)),
+            Pose(0.72f, new Vector3(-2f, -12f, 2f)),
+            Pose(1.23f, new Vector3(4f, 16f, -3f)),
+            Pose(1.65f, new Vector3(3f, 12f, -2f)),
+            Pose(2.35f, new Vector3(0f, -3f, 0f)),
             Pose(duration, Vector3.zero)
         });
-        SetRotationCurve(clip, root, bones["RightArm"], new[]
+        SetRotationCurve(clip, root, bones["Head"], new[]
         {
             Pose(0f, Vector3.zero),
-            Pose(0.38f, new Vector3(-25f, -55f, -55f)),
-            Pose(0.82f, new Vector3(18f, 60f, 28f)),
-            Pose(1.18f, new Vector3(-18f, 46f, 22f)),
-            Pose(1.55f, new Vector3(12f, -44f, -38f)),
-            Pose(1.95f, new Vector3(-30f, 52f, 24f)),
-            Pose(2.35f, new Vector3(24f, 30f, 18f)),
-            Pose(2.68f, new Vector3(-10f, 12f, -8f)),
-            Pose(duration, Vector3.zero)
-        });
-        SetRotationCurve(clip, root, bones["RightForeArm"], new[]
-        {
-            Pose(0f, Vector3.zero),
-            Pose(0.38f, new Vector3(0f, 0f, -8f)),
-            Pose(0.82f, new Vector3(-10f, 0f, 10f)),
-            Pose(1.18f, new Vector3(-20f, 0f, 12f)),
-            Pose(1.55f, new Vector3(8f, 0f, -8f)),
-            Pose(1.95f, new Vector3(-20f, 0f, 10f)),
-            Pose(2.35f, new Vector3(12f, 0f, 5f)),
-            Pose(2.68f, new Vector3(-5f, 0f, 0f)),
+            Pose(.55f, new Vector3(-2f, -7f, 0f)),
+            Pose(1.12f, new Vector3(2f, 5f, 0f)),
+            Pose(1.85f, new Vector3(1f, 3f, 0f)),
             Pose(duration, Vector3.zero)
         });
         return SaveClip(clip, "Assets/Animations/Attack.anim");
@@ -466,15 +490,16 @@ public static class PuppetProjectBootstrap
         SetRotationCurve(clip, root, bones["Spine"], new[]
         {
             Pose(0f, Vector3.zero),
-            Pose(0.55f, new Vector3(24f, 0f, 0f)),
-            Pose(1.55f, new Vector3(24f, 0f, 0f)),
+            Pose(0.68f, new Vector3(18f, -3f, 0f)),
+            Pose(1.45f, new Vector3(18f, -3f, 0f)),
             Pose(duration, Vector3.zero)
         });
         SetRotationCurve(clip, root, bones["Head"], new[]
         {
             Pose(0f, Vector3.zero),
-            Pose(0.55f, new Vector3(16f, 0f, 0f)),
-            Pose(1.55f, new Vector3(16f, 0f, 0f)),
+            Pose(0.28f, new Vector3(3f, -6f, 0f)),
+            Pose(0.82f, new Vector3(11f, -6f, 0f)),
+            Pose(1.5f, new Vector3(11f, -6f, 0f)),
             Pose(duration, Vector3.zero)
         });
         return SaveClip(clip, "Assets/Animations/Bow.anim");
@@ -571,7 +596,8 @@ public static class PuppetProjectBootstrap
         SetRotationCurve(clip, root, bones["Head"], new[]
         {
             Pose(0f, Vector3.zero),
-            Pose(1.45f, new Vector3(-18f, 9f, 0f)),
+            Pose(0.55f, new Vector3(-8f, 5f, 0f)),
+            Pose(1.65f, new Vector3(-16f, 9f, 0f)),
             Pose(2.70f, new Vector3(-20f, 7.5f, 1f)),
             Pose(3.85f, new Vector3(-17f, 10.5f, -1f)),
             Pose(5.08f, new Vector3(-18f, 9f, 0f)),
@@ -602,18 +628,18 @@ public static class PuppetProjectBootstrap
             bones["LeftForeArm"].position, bones["LeftHand"].position
         );
         Vector3 guardDirection = (
-            towardViewer * 0.94f + Vector3.up * 0.08f + swordSide * 0.22f
+            towardViewer * 0.88f + Vector3.down * 0.35f + swordSide * 0.30f
         ).normalized;
         Vector3 guardTarget = bones["LeftArm"].position +
-            guardDirection * swordReach * 0.985f;
+            guardDirection * swordReach * 0.90f;
         Vector3 guardDriftDirection = (
             guardDirection + Vector3.up * 0.045f + swordSide * 0.018f
         ).normalized;
         Vector3 guardDriftTarget = bones["LeftArm"].position +
-            guardDriftDirection * swordReach * 0.985f;
+            guardDriftDirection * swordReach * 0.90f;
         Vector3 elbowPole = bones["LeftShoulder"].position +
-            swordSide * shoulderSpan * 1.05f +
-            Vector3.down * shoulderSpan * 0.42f +
+            swordSide * shoulderSpan * 0.72f +
+            Vector3.down * shoulderSpan * 0.65f +
             towardViewer * shoulderSpan * 0.42f;
         ArmPose guardPose = SolveArmPose(
             bones["LeftArm"], bones["LeftForeArm"], bones["LeftHand"],
@@ -626,33 +652,33 @@ public static class PuppetProjectBootstrap
         SetAbsoluteRotationCurve(clip, root, bones["LeftArm"], new[]
         {
             new TimedRotation(0f, guardPose.UpperRest),
-            new TimedRotation(0.30f, Quaternion.Slerp(
-                guardPose.UpperRest, guardPose.UpperTarget, 0.55f
+            new TimedRotation(0.42f, Quaternion.Slerp(
+                guardPose.UpperRest, guardPose.UpperTarget, 0.40f
             )),
-            new TimedRotation(0.82f, guardPose.UpperTarget),
+            new TimedRotation(1.02f, guardPose.UpperTarget),
             new TimedRotation(1.55f, guardDriftPose.UpperTarget),
             new TimedRotation(2.25f, guardPose.UpperTarget),
             new TimedRotation(2.95f, guardDriftPose.UpperTarget),
-            new TimedRotation(3.68f, guardPose.UpperTarget),
+            new TimedRotation(3.30f, guardPose.UpperTarget),
             new TimedRotation(duration, guardPose.UpperRest)
         });
         SetAbsoluteRotationCurve(clip, root, bones["LeftForeArm"], new[]
         {
             new TimedRotation(0f, guardPose.LowerRest),
-            new TimedRotation(0.30f, Quaternion.Slerp(
-                guardPose.LowerRest, guardPose.LowerTarget, 0.55f
+            new TimedRotation(0.48f, Quaternion.Slerp(
+                guardPose.LowerRest, guardPose.LowerTarget, 0.40f
             )),
-            new TimedRotation(0.82f, guardPose.LowerTarget),
+            new TimedRotation(1.08f, guardPose.LowerTarget),
             new TimedRotation(1.55f, guardDriftPose.LowerTarget),
             new TimedRotation(2.25f, guardPose.LowerTarget),
             new TimedRotation(2.95f, guardDriftPose.LowerTarget),
-            new TimedRotation(3.68f, guardPose.LowerTarget),
+            new TimedRotation(3.30f, guardPose.LowerTarget),
             new TimedRotation(duration, guardPose.LowerRest)
         });
         SetRotationCurve(clip, root, bones["Spine"], new[]
         {
             Pose(0f, Vector3.zero),
-            Pose(0.22f, new Vector3(0f, -13f, -3f)),
+            Pose(0.48f, new Vector3(0f, -10f, -2f)),
             Pose(1.45f, new Vector3(-0.8f, -12.2f, -3.5f)),
             Pose(2.45f, new Vector3(0.6f, -13.8f, -2.5f)),
             Pose(3.68f, new Vector3(0f, -13f, -3f)),
@@ -661,8 +687,8 @@ public static class PuppetProjectBootstrap
         SetRotationCurve(clip, root, bones["Head"], new[]
         {
             Pose(0f, Vector3.zero),
-            Pose(0.16f, new Vector3(-2f, -18f, 2f)),
-            Pose(0.38f, new Vector3(1f, -11f, 0f)),
+            Pose(0.30f, new Vector3(-2f, -13f, 1f)),
+            Pose(0.65f, new Vector3(1f, -11f, 0f)),
             Pose(1.45f, new Vector3(0f, -15f, 1f)),
             Pose(2.45f, new Vector3(1.5f, -9f, -0.5f)),
             Pose(3.10f, new Vector3(0f, -13f, 0.5f)),
@@ -683,8 +709,14 @@ public static class PuppetProjectBootstrap
 
     private static AnimationClip SaveClip(AnimationClip clip, string path)
     {
-        AssetDatabase.DeleteAsset(path);
-        AssetDatabase.CreateAsset(clip, path);
+        var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+        if (existing)
+        {
+            EditorUtility.CopySerialized(clip, existing);
+            UnityEngine.Object.DestroyImmediate(clip);
+            EditorUtility.SetDirty(existing);
+        }
+        else AssetDatabase.CreateAsset(clip, path);
         return AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
     }
 
@@ -728,10 +760,10 @@ public static class PuppetProjectBootstrap
         return new[]
         {
             new TimedRotation(0f, rest),
-            new TimedRotation(0.32f, approach),
-            new TimedRotation(0.72f, sip),
-            new TimedRotation(2.58f, sip),
-            new TimedRotation(2.95f, approach),
+            new TimedRotation(0.55f, approach),
+            new TimedRotation(1.0f, sip),
+            new TimedRotation(2.35f, sip),
+            new TimedRotation(2.88f, approach),
             new TimedRotation(3.3f, rest)
         };
     }

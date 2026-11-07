@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -22,6 +23,7 @@ public static class HybridTheatreValidation
             busyDrop, pause, epochRelease, musicianBounded, masks;
         public int errors;
         public string failure;
+        public List<string> engineDiagnostics = new List<string>();
     }
 
     // Parent runs after scene generation, in a separate batch Editor process (without -quit).
@@ -31,7 +33,7 @@ public static class HybridTheatreValidation
             throw new InvalidOperationException("Generate hybrid scenes before running validation.");
         EditorSceneManager.OpenScene(HybridTheatreBuilder.SoloScene);
         SessionState.SetBool(Pending, true);
-        EditorApplication.EnterPlaymode();
+        EditorPlayModeStartup.EnterAfterInitialization();
     }
 
     [InitializeOnLoadMethod]
@@ -48,7 +50,11 @@ public static class HybridTheatreValidation
 
     static void Log(string message, string trace, LogType type)
     {
-        if (type == LogType.Error || type == LogType.Exception || type == LogType.Assert) errors++;
+        if (type == LogType.Error || type == LogType.Exception || type == LogType.Assert)
+        {
+            errors++;
+            report.engineDiagnostics.Add(message + "\n" + trace);
+        }
     }
 
     static void Tick()
@@ -142,12 +148,12 @@ public static class HybridTheatreValidation
         var attack = Control(1, "ATTACK");
         session.AcceptSolo(attack);
         Advance(session, .4f);
-        Vector3 hand = actor.mapping.leftHand.position;
-        attack.leftHandY = .9f;
+        Vector3 hand = actor.mapping.rightHand.position;
+        attack.rightHandY = .9f;
         session.AcceptSolo(attack);
         Advance(session, .4f);
-        Require(actor.ActionActive && actor.StartedCount == 1 && Vector3.Distance(hand, actor.mapping.leftHand.position) > .02f,
-            "ATTACK blocked unmasked left-arm mapping or replayed.");
+        Require(actor.ActionActive && actor.StartedCount == 1 && Vector3.Distance(hand, actor.mapping.rightHand.position) > .02f,
+            "ATTACK blocked unmasked right-arm mapping or replayed.");
         report.liveUnmaskedArm = true;
         var busy = Control(2, "BOW");
         busy.leftHandY = .9f;

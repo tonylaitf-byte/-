@@ -6,6 +6,10 @@
 
 最新修改與驗證範圍見 [CHANGELOG.md](CHANGELOG.md)，組員分支與回退方式見 [VERSION_CONTROL.md](VERSION_CONTROL.md)。
 
+**11/6–11/7 組員交付版**：本分支包含庭院古寺、兩側屋舍、87.5 公分高的酒席、戲偶材質與修整後的手勢動畫。網頁版已建置在 `hand-tracking/static/theatre/Build/`，請下載本分支而非舊 `main`，解壓到新資料夾再啟動。更新過的組員也要執行下方的 `--build` 指令，避免沿用電腦上的舊 Docker 映像。
+
+可對照[正式網頁版單人舞台截圖](reports/production-art/1-mapping.png)。要看較暗的月色、高低石板與持劍／撫弦展示圖，請開啟 [Blender 展示場景](reports/blender-render/courtyard-display-pose.blend)；這是獨立的靜態渲染版本，不等於 Unity 即時畫面。背景測試與索引錯誤修正記錄見[驗證報告](reports/editor-startup-fix/README.md)。
+
 安裝並啟動 Docker Desktop，在儲存庫根目錄執行：
 
 ```sh

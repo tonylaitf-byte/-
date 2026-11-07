@@ -1,0 +1,16 @@
+{
+  "engine": "CYCLES",
+  "resolution": [
+    1600,
+    900
+  ],
+  "exposure": -0.6499999761581421,
+  "worldStrength": 0.035,
+  "lightEnergyWatts": {
+    "Cool moon softbox": 450,
+    "Soft face fill": 65,
+    "Warm courtyard bounce": 85,
+    "Temple rim": 350
+  },
+  "scope": "Lighting-only variant; same camera, geometry and materials as the bright Cycles trial. Unity unchanged."
+}

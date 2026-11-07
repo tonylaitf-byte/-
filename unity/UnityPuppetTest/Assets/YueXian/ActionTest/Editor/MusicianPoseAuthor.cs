@@ -51,7 +51,8 @@ public sealed class MusicianPoseAuthor
         {
             gesture=Envelope(t,.45f,1.2f,2.6f,3.6f);
             desiredTarget=P(-.22f,-.59f,1.32f); desiredDir=D(.90f,-.23f,.22f).normalized;
-            bow=12*gesture; nod=4*gesture; yaw=10*Envelope(t,0,.45f,2.6f,3.6f);
+            bow=10*gesture; nod=4*Envelope(t,.58f,1.32f,2.6f,3.6f);
+            yaw=8*Envelope(t,0,.55f,2.6f,3.6f);
         }
         if(state=="Pause")
         {
@@ -75,26 +76,27 @@ public sealed class MusicianPoseAuthor
             // rather than the open, convivial silhouette of Challenge.
             float drive=Envelope(t,0,.32f,2.75f,3.5f);
             play=1; stroke=Mathf.Sin(t/.46f*Mathf.PI*2)*(1-Ramp(t,3.2f,3.5f));
-            if(t<.35f)stroke=-Mathf.Sin(t/.35f*Mathf.PI);
-            desiredTarget+=D(stroke*.020f,stroke*.016f,stroke*.062f);
-            bow=7.5f*drive; yaw=4.5f*Mathf.Sin(t/.92f*Mathf.PI*2)*drive;
-            sway=4.2f*Mathf.Sin(t/.92f*Mathf.PI*2)*(1-Ramp(t,3.2f,3.5f)); nod=1.2f+2.4f*drive;
+            float opening=-Mathf.Sin(Mathf.Clamp01(t/.55f)*Mathf.PI);
+            stroke=Mathf.Lerp(opening,stroke,Ramp(t,.25f,.55f));
+            desiredTarget+=D(stroke*.012f,stroke*.010f,stroke*.030f);
+            bow=5.5f*drive; yaw=2.2f*Mathf.Sin(t/.92f*Mathf.PI*2)*drive;
+            sway=2.4f*Mathf.Sin(t/.92f*Mathf.PI*2)*(1-Ramp(t,3.2f,3.5f)); nod=1.2f+1.8f*drive;
         }
         if(state=="FastLoop")
         {
             play=1; stroke=Mathf.Sin(t*Mathf.PI*4);
-            desiredTarget+=D(stroke*.018f,stroke*.012f,stroke*.052f);
+            desiredTarget+=D(stroke*.012f,stroke*.008f,stroke*.028f);
             bow=4.5f*(.5f-.5f*Mathf.Cos(t*Mathf.PI*2));
-            sway=3.6f*Mathf.Sin(t*Mathf.PI*2); yaw=3.2f*Mathf.Sin(t*Mathf.PI*2); nod=1.2f+1.5f*(.5f-.5f*Mathf.Cos(t*Mathf.PI*2));
+            sway=2.2f*Mathf.Sin(t*Mathf.PI*2); yaw=2f*Mathf.Sin(t*Mathf.PI*2); nod=1.2f+1.5f*(.5f-.5f*Mathf.Cos(t*Mathf.PI*2));
         }
         if(state=="FastExit") { play=1-Ramp(t,.3f,1); stroke=-.65f*Mathf.Sin(Mathf.Clamp01(t/.3f)*Mathf.PI)*(1-Ramp(t,.28f,.3f)); nod=1.2f*play; }
         if(state=="Challenge")
         {
             // 「哈哈！你喝你的好酒，我用琴聲陪你助興！」
             // Sweep away from the instrument and hold an open-palm invitation.
-            float invite=Ramp(t,0,.38f)*(1-Ramp(t,3.2f,4.48f));
+            float invite=Ramp(t,0,.65f)*(1-Ramp(t,3.2f,4.48f));
             play=1; gesture=invite; open=invite;
-            desiredTarget=Vector3.Lerp(desiredTarget,P(-.58f,-.39f,1.49f),invite);
+            desiredTarget=Vector3.Lerp(desiredTarget,P(-.48f,-.44f,1.40f),invite);
             desiredDir=Vector3.Slerp(desiredDir,D(.28f,-.58f,.76f).normalized,invite);
             desiredRadial=Vector3.Slerp(desiredRadial,Vector3.up,invite);
             float settle=Ramp(t,4.15f,4.48f);
@@ -111,7 +113,7 @@ public sealed class MusicianPoseAuthor
         if(play>0)
         {
             bool fast=state.StartsWith("Fast")||state=="Challenge";
-            desiredTarget+=D(0,0,stroke*(fast?.019f:.010f));
+            desiredTarget+=D(0,0,stroke*(fast?.012f:.010f));
         }
         Vector3 target=chest.InverseTransformPoint(desiredTarget), direction=chest.InverseTransformDirection(desiredDir), radial=chest.InverseTransformDirection(desiredRadial);
         targetLocal=Vector3.Lerp(wrist,target,amount);
@@ -125,7 +127,7 @@ public sealed class MusicianPoseAuthor
         Rotate(head,Vector3.left,nod);
         SolveArm(chest.TransformPoint(targetLocal),chest.TransformPoint(pole));
         AimHand(chest.TransformDirection(dirLocal),chest.TransformDirection(radialLocal));
-        float wristStroke=state.StartsWith("Fast")?12f:state=="Challenge"?8f:3f;
+        float wristStroke=state.StartsWith("Fast")?8f:state=="Challenge"?6f:3f;
         // Fan across the strings instead of turning the fingertips into the soundboard.
         Rotate(Find("RightHand"),Find("Yueqin_Independent").TransformDirection(Vector3.down),stroke*wristStroke);
         foreach(string finger in new[]{"Index","Middle","Ring","Little"})

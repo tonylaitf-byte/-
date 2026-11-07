@@ -105,14 +105,14 @@ public static class HybridMotionReview
         if (Environment.GetEnvironmentVariable("HYBRID_REVIEW_LABEL") == "after") HybridTheatreBuilder.Prepare();
         EditorSceneManager.OpenScene(HybridTheatreBuilder.DuetScene);
         SessionState.SetBool(Pending, true);
-        EditorApplication.EnterPlaymode();
+        EditorPlayModeStartup.EnterAfterInitialization();
     }
     [InitializeOnLoadMethod] static void Resume()
     {
         if (!SessionState.GetBool(Pending, false)) return;
         results.Clear(); diagnostics.Clear(); routine = null; lastFrame = -1;
         string label = Environment.GetEnvironmentVariable("HYBRID_REVIEW_LABEL") ?? "review";
-        if (label != "before" && label != "after") label = "review";
+        if (label != "before" && label != "after" && label != "gesture-refined") label = "review";
         folder = Path.GetFullPath("../../reports/motion-" + label);
         Directory.CreateDirectory(folder);
         Application.logMessageReceived += Log;
@@ -137,12 +137,13 @@ public static class HybridMotionReview
         Application.logMessageReceived -= Log;
         EditorApplication.update -= Tick;
         SessionState.SetBool(Pending, false);
+        bool passed = failure == "" && results.Count == 10 && diagnostics.Count == 0;
         File.WriteAllText(Path.Combine(folder, "MotionReview.json"), JsonUtility.ToJson(new Report {
-            completed = failure == "" && results.Count == 10, timingChecks = failure == "", failure = failure,
+            completed = passed, timingChecks = failure == "", failure = failure,
             unityVersion = Application.unityVersion, actions = results.ToArray(), engineDiagnostics = diagnostics.ToArray()
         }, true));
-        Debug.Log("HYBRID_MOTION_REVIEW_" + (failure == "" ? "COMPLETE" : "FAIL: " + failure));
-        EditorApplication.Exit(failure == "" ? 0 : 1);
+        Debug.Log("HYBRID_MOTION_REVIEW_" + (passed ? "COMPLETE" : "FAIL: " + failure + "; diagnostics=" + diagnostics.Count));
+        EditorApplication.Exit(passed ? 0 : 1);
     }
     static PuppetControlState Control(int sequence = 0, string action = "")
     {
@@ -187,7 +188,7 @@ public static class HybridMotionReview
                 if (shot < samples.Length && time + .001f >= samples[shot])
                 {
                     yield return null;
-                    Capture(sheet, shot);
+                    Capture(sheet, shot, id);
                     shot++;
                 }
                 session.Tick(Dt);
@@ -197,7 +198,7 @@ public static class HybridMotionReview
                 if (frame % 180 == 0) yield return null;
             }
             if (frame >= 3600) throw new InvalidOperationException("Action failed to finish: " + id);
-            while (shot < samples.Length) { yield return null; Capture(sheet, shot); shot++; }
+            while (shot < samples.Length) { yield return null; Capture(sheet, shot, id); shot++; }
             File.WriteAllBytes(Path.Combine(folder, id + ".png"), sheet.EncodeToPNG());
             UnityEngine.Object.DestroyImmediate(sheet);
             results.Add(left.Finish()); results.Add(right.Finish());
@@ -234,7 +235,7 @@ public static class HybridMotionReview
         if (HybridMotionTiming.ClipTime(1, 1, 0, 0, 0) != 0 || HybridMotionTiming.Ease(0) != 0 || HybridMotionTiming.Ease(1) != 1)
             throw new InvalidOperationException("Degenerate timing or easing endpoint failed.");
     }
-    static void Capture(Texture2D sheet, int index)
+    static void Capture(Texture2D sheet, int index, string action)
     {
         var camera = Camera.main;
         if (!camera) throw new InvalidOperationException("Stage camera missing.");
@@ -249,6 +250,8 @@ public static class HybridMotionReview
             RenderTexture.active = target;
             frame.ReadPixels(new Rect(0, 0, 800, 450), 0, 0);
             frame.Apply();
+            if (folder.EndsWith("motion-gesture-refined"))
+                File.WriteAllBytes(Path.Combine(folder, action + "-" + index + ".png"), frame.EncodeToPNG());
             // Eight successive poses: two rows, four columns.
             var pixels = frame.GetPixels(0, 0, 800, 450);
             var reduced = new Color[400 * 225];

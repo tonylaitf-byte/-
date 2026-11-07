@@ -107,7 +107,7 @@ class DuetMappingRouter:
                     controls['moveX']=controls['bodyX']
                     self.last[side]=copy.copy(controls)
                 elif owner['ownerHeld']:
-                    pipe.calibrator.interrupt()
+                    pipe.calibrator.interrupt(now)
                     controls=self.last[side].copy()
                 else:
                     controls=pipe.no_hand(now)

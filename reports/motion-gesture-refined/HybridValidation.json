@@ -1,0 +1,16 @@
+{
+    "passed": true,
+    "eventGate": true,
+    "solo": true,
+    "duet": true,
+    "liveUnmaskedArm": true,
+    "latestTargetReturn": true,
+    "busyDrop": true,
+    "pause": true,
+    "epochRelease": true,
+    "musicianBounded": true,
+    "masks": true,
+    "errors": 0,
+    "failure": "",
+    "engineDiagnostics": []
+}

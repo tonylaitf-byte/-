@@ -15,7 +15,7 @@ public static class HybridHandoffValidation
     static Report report;
     [Serializable] sealed class Report
     {
-        public bool passed;
+        public bool passed, functionalChecksPassed;
         public string failure = "";
         public List<string> engineDiagnostics = new List<string>();
         public List<Row> results = new List<Row>();
@@ -32,13 +32,15 @@ public static class HybridHandoffValidation
     {
         EditorSceneManager.OpenScene(HybridTheatreBuilder.DuetScene);
         SessionState.SetBool(Pending, true);
-        EditorApplication.EnterPlaymode();
+        EditorPlayModeStartup.EnterAfterInitialization();
     }
     [InitializeOnLoadMethod] static void Resume()
     {
         if (!SessionState.GetBool(Pending, false)) return;
         report = new Report(); routine = null; lastFrame = -1;
         Application.logMessageReceived += Log;
+        if (Environment.GetEnvironmentVariable("PUPPET_DIAGNOSTIC_PROBE") == "1")
+            Debug.LogError("EXPECTED_DIAGNOSTIC_PROBE: validation must fail on logged errors.");
         EditorApplication.update += Tick;
     }
     static void Log(string message, string trace, LogType type)
@@ -50,13 +52,15 @@ public static class HybridHandoffValidation
     {
         if (!EditorApplication.isPlaying || lastFrame == Time.frameCount) return;
         lastFrame = Time.frameCount;
-        try { if (routine == null) routine = Check(); if (routine.MoveNext()) return; report.passed = true; }
+        try { if (routine == null) routine = Check(); if (routine.MoveNext()) return; report.functionalChecksPassed = true; }
         catch (Exception error) { report.failure = error.ToString(); }
         Application.logMessageReceived -= Log;
         EditorApplication.update -= Tick;
         SessionState.SetBool(Pending, false);
+        report.passed = report.functionalChecksPassed && report.engineDiagnostics.Count == 0;
         Directory.CreateDirectory("../../reports/hybrid-handoff");
-        File.WriteAllText("../../reports/hybrid-handoff/Validation.json", JsonUtility.ToJson(report, true));
+        string name = Environment.GetEnvironmentVariable("PUPPET_DIAGNOSTIC_PROBE") == "1" ? "DiagnosticProbe.json" : "Validation.json";
+        File.WriteAllText("../../reports/hybrid-handoff/" + name, JsonUtility.ToJson(report, true));
         EditorApplication.Exit(report.passed ? 0 : 1);
     }
     static void Require(bool value, string message)

@@ -24,7 +24,9 @@ class StableCalibrationTests(unittest.TestCase):
                 calibrator.observe({**CONTROL_DEFAULTS, 'leftHandY': value}, index / 30)
                 self.assertFalse(calibrator.calibrated)
             # Holding still afterwards must allow progress to recover.
-            for index in range(46):
+            # A new pose needs up to two suspect samples to distinguish it from
+            # one-frame noise before starting its own full stable interval.
+            for index in range(50):
                 calibrator.observe(CONTROL_DEFAULTS, 5 + index / 30)
             self.assertTrue(calibrator.calibrated)
 
@@ -44,15 +46,12 @@ class StableCalibrationTests(unittest.TestCase):
         self.assertTrue(calibrator.calibrated)
 
     def test_loss_gap_and_invalid_data_restart_incomplete_window(self):
-        for interruption in ('missing', 'gap', 'nan'):
+        for interruption in ('gap', 'nan'):
             pipe = PuppetControlPipeline(calibration_samples=3)
             points = samples.PuppetControlsTests().make_landmarks()
             pipe.update(points, 0)
             pipe.update(points, .04)
-            if interruption == 'missing':
-                pipe.no_hand(.05)
-                self.assertEqual(pipe.calibration_progress, 0)
-            elif interruption == 'nan':
+            if interruption == 'nan':
                 pipe.calibrator.observe({**CONTROL_DEFAULTS, 'bodyX': math.nan}, .05)
             now = 1 if interruption == 'gap' else .08
             pipe.update(points, now)
@@ -64,13 +63,15 @@ class StableCalibrationTests(unittest.TestCase):
             pipe.no_hand(now+.1)
             self.assertTrue(pipe.calibrated, 'Brief loss must retain an already-established neutral.')
 
-    def test_duet_loss_resets_only_unfinished_side(self):
+    def test_duet_short_loss_pauses_only_unfinished_side(self):
         router = DuetMappingRouter(calibration_samples=3)
         hands = [observation(.2), observation(.8)]
         router.update(hands, 0)
-        router.update(hands, .04)
+        before = router.update(hands, .04)
         state = router.update([hands[1]], .08)
-        self.assertEqual(state['left']['controls']['calibrationProgress'], 0)
+        self.assertEqual(state['left']['controls']['calibrationProgress'],
+                         before['left']['controls']['calibrationProgress'])
+        self.assertFalse(state['left']['controls']['calibrated'])
         self.assertTrue(state['right']['controls']['calibrated'])
 
 

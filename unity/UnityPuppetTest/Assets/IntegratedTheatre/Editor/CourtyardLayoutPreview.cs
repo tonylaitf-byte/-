@@ -113,7 +113,7 @@ public static class CourtyardLayoutPreview
         Directory.CreateDirectory(outputFolder);
         SessionState.SetString("CourtyardLayoutPreview.Output", outputFolder);
         SessionState.SetBool(Pending, true);
-        EditorApplication.EnterPlaymode();
+        EditorPlayModeStartup.EnterAfterInitialization();
     }
     static Transform Group(Transform parent, Renderer[] renderers, string name)
     {

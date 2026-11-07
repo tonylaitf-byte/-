@@ -57,11 +57,11 @@ fs.mkdirSync(output, {recursive:true});
       injected=envelope(players,control({action:'ATTACK',actionSequence:1,gesture:5,gestureHold:1,gestureArmed:false}));
       await page.waitForFunction(()=>window.__theatreStatus?.leftHybrid?.actionActive && window.__theatreStatus.leftHybrid.startedCount===1);
       const during=await state();
-      const handBefore=during.leftHybrid.mappingPose.leftHand;
-      injected=envelope(players,control({leftHandY:.9,action:'ATTACK',actionSequence:1,gesture:5,gestureHold:1,gestureArmed:false}));
-      await page.waitForFunction(()=>window.__theatreStatus?.leftHybrid?.mappingPose?.inputLeftHandY>.85);
+      const handBefore=during.leftHybrid.mappingPose.rightHand;
+      injected=envelope(players,control({rightHandY:.9,action:'ATTACK',actionSequence:1,gesture:5,gestureHold:1,gestureArmed:false}));
+      await page.waitForFunction(()=>window.__theatreStatus?.leftHybrid?.mappingPose?.inputRightHandY>.85);
       await page.waitForFunction(before=>{
-        const s=window.__theatreStatus?.leftHybrid, p=s?.mappingPose?.leftHand;
+        const s=window.__theatreStatus?.leftHybrid, p=s?.mappingPose?.rightHand;
         return s?.actionActive && p && Math.hypot(p.x-before.x,p.y-before.y,p.z-before.z)>.02;
       },handBefore);
       assert.equal((await state()).leftHybrid.startedCount,1,'Repeated event sequence must not restart an action.');

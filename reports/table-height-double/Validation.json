@@ -1,0 +1,9 @@
+{
+    "passed": true,
+    "tabletopItemsMovedTogether": true,
+    "floorPropsUnchanged": true,
+    "tableFeetGrounded": true,
+    "raise": 0.4375,
+    "beforeTopHeight": 0.4375,
+    "afterTopHeight": 0.875
+}

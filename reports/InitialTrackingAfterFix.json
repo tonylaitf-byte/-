@@ -1,0 +1,87 @@
+{
+  "scope": "Deterministic calibration logic only; no detector, camera, server or Unity input.",
+  "diagnosticWritesProductionCode": false,
+  "observationWindowSeconds": 30,
+  "scenarios": [
+    {
+      "scenario": "perfectly_still",
+      "inferenceFps": 30,
+      "calibratedWithin30Seconds": true,
+      "completedAtSeconds": 1.4667,
+      "incompleteWindowResets": 0,
+      "finalProgress": 1.0
+    },
+    {
+      "scenario": "perfectly_still",
+      "inferenceFps": 15,
+      "calibratedWithin30Seconds": true,
+      "completedAtSeconds": 1.4667,
+      "incompleteWindowResets": 0,
+      "finalProgress": 1.0
+    },
+    {
+      "scenario": "perfectly_still",
+      "inferenceFps": 10,
+      "calibratedWithin30Seconds": true,
+      "completedAtSeconds": 1.5,
+      "incompleteWindowResets": 0,
+      "finalProgress": 1.0
+    },
+    {
+      "scenario": "perfectly_still",
+      "inferenceFps": 5,
+      "calibratedWithin30Seconds": true,
+      "completedAtSeconds": 2.2,
+      "incompleteWindowResets": 0,
+      "finalProgress": 1.0
+    },
+    {
+      "scenario": "perfectly_still",
+      "inferenceFps": 3,
+      "calibratedWithin30Seconds": true,
+      "completedAtSeconds": 3.6667,
+      "incompleteWindowResets": 0,
+      "finalProgress": 1.0
+    },
+    {
+      "scenario": "perfectly_still",
+      "inferenceFps": 2.5,
+      "calibratedWithin30Seconds": true,
+      "completedAtSeconds": 4.4,
+      "incompleteWindowResets": 0,
+      "finalProgress": 1.0
+    },
+    {
+      "scenario": "one_missing_detection_per_second",
+      "inferenceFps": 30,
+      "calibratedWithin30Seconds": true,
+      "completedAtSeconds": 1.5333,
+      "incompleteWindowResets": 0,
+      "finalProgress": 1.0
+    },
+    {
+      "scenario": "small_control_noise",
+      "inferenceFps": 30,
+      "calibratedWithin30Seconds": true,
+      "completedAtSeconds": 1.4667,
+      "incompleteWindowResets": 0,
+      "finalProgress": 1.0
+    },
+    {
+      "scenario": "pinky_depth_control_noise",
+      "inferenceFps": 30,
+      "calibratedWithin30Seconds": true,
+      "completedAtSeconds": 1.4667,
+      "incompleteWindowResets": 0,
+      "finalProgress": 1.0
+    },
+    {
+      "scenario": "palm_position_control_noise",
+      "inferenceFps": 30,
+      "calibratedWithin30Seconds": true,
+      "completedAtSeconds": 1.4667,
+      "incompleteWindowResets": 0,
+      "finalProgress": 1.0
+    }
+  ]
+}

@@ -73,7 +73,7 @@ public static class HeroRefinementPreview
         Directory.CreateDirectory(Folder);
         File.WriteAllText(Folder + "/surfaces.txt", string.Join("\n", cache.Select(kv => kv.Key + " -> " + AssetDatabase.GetAssetPath(kv.Value))));
         SessionState.SetBool(Pending, true);
-        EditorApplication.EnterPlaymode();
+        EditorPlayModeStartup.EnterAfterInitialization();
     }
     static Material SurfaceMaterial(Material source, Shader shader, string assets)
     {

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace PalmTheatre.Integration
 {
-    // Opt-in on the independent art-preview scene only. Existing automatic
+    // Opt-in on approved preview and production scenes. Existing automatic
     // costume/skin passes finish first; no shared source material is edited.
     [DefaultExecutionOrder(1000)]
     public sealed class HeroSurfaceRefinement : MonoBehaviour
