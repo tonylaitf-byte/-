@@ -40,10 +40,12 @@ public sealed class PuppetControlState
     public string detectedAction;
     public string action;
     public int actionSequence;
+    public int inputEpoch;
 }
 
 public sealed class PuppetBoneTest : MonoBehaviour
 {
+    [NonSerialized] public bool externallyDriven;
     [Header("Rig")]
     public Transform head;
     public Transform spine;
@@ -65,6 +67,29 @@ public sealed class PuppetBoneTest : MonoBehaviour
     [Range(0.5f, 0.999f)] public float maximumReach = 0.95f;
     [Range(1f, 180f)] public float shoulderLimitDegrees = 110f;
     [Range(1f, 180f)] public float elbowLimitDegrees = 155f;
+
+    [Header("Live Arm Body Avoidance")]
+    public bool avoidBody = true;
+    [Range(.15f, .45f)] public float bodyAvoidanceRadius = .30f;
+    [Range(.15f, .40f)] public float headAvoidanceRadius = .26f;
+    [Range(0f, .08f)] public float avoidancePadding = .025f;
+    [Range(.02f, .5f)] public float avoidanceReleaseTime = .12f;
+    [Range(60f, 720f)] public float avoidanceAngularSpeed = 180f;
+    public bool showAvoidanceGizmos;
+    public float LeftAvoidanceBlend { get; private set; }
+    public float RightAvoidanceBlend { get; private set; }
+    public float LeftBodyPenetration { get; private set; }
+    public float RightBodyPenetration { get; private set; }
+    public bool HasSwordAvoidance => bodyAvoidance.HasLeftWeapon;
+    private readonly PuppetBodyAvoidance bodyAvoidance = new PuppetBodyAvoidance();
+    private float avoidanceDeltaTime;
+    private sealed class ArmContinuity
+    {
+        public bool valid, constrained;
+        public Quaternion upper, lower;
+    }
+    private readonly ArmContinuity leftContinuity = new ArmContinuity();
+    private readonly ArmContinuity rightContinuity = new ArmContinuity();
 
     [Header("Head And Body Range")]
     public float headPitchDegrees = 42f;
@@ -235,6 +260,7 @@ public sealed class PuppetBoneTest : MonoBehaviour
 
     private void Start()
     {
+        if (externallyDriven) return;
         // Imported FBX hierarchies can finish their activation after Awake.
         // Bind a second time here so a replaced visual model cannot leave the
         // live arm IK pointing at missing transforms.
@@ -397,6 +423,28 @@ public sealed class PuppetBoneTest : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (externallyDriven) return;
+        EvaluatePose(Time.deltaTime, Time.unscaledDeltaTime, null);
+    }
+
+    public void InitializeHybridDrive()
+    {
+        externallyDriven = true;
+        suspendedForAnimation = false;
+        animationHandoffActive = false;
+        ResolveRig();
+        CacheRestPose();
+    }
+
+    public void EvaluateHybridPose(float deltaTime, Action composeBody, bool mapLeftArm = true, bool mapRightArm = true)
+    {
+        if (!externallyDriven) return;
+        EvaluatePose(deltaTime, deltaTime, composeBody, mapLeftArm, mapRightArm);
+    }
+
+    private void EvaluatePose(float deltaTime, float unscaledDeltaTime, Action composeBody,
+        bool mapLeftArm = true, bool mapRightArm = true)
+    {
         if (!hasExternalInput && useAutomaticDemo)
         {
             ContinuousIkMode = false;
@@ -424,7 +472,7 @@ public sealed class PuppetBoneTest : MonoBehaviour
                 ref bodyPositionVelocity.x,
                 bodyTime,
                 Mathf.Max(maximumBodySpeed, 0.01f),
-                Time.deltaTime
+                deltaTime
             );
             currentBodyPosition.x = currentHorizontal;
             ApplyHorizontalMovementOnly();
@@ -437,21 +485,21 @@ public sealed class PuppetBoneTest : MonoBehaviour
             targetLeftCenterVelocity = Mathf.MoveTowards(
                 targetLeftCenterVelocity,
                 0f,
-                Time.unscaledDeltaTime * 12f
+                unscaledDeltaTime * 12f
             );
             targetRightCenterVelocity = Mathf.MoveTowards(
                 targetRightCenterVelocity,
                 0f,
-                Time.unscaledDeltaTime * 12f
+                unscaledDeltaTime * 12f
             );
         }
         currentLeftHand = Vector3.SmoothDamp(
             currentLeftHand, targetLeftHand, ref leftHandVelocity, handTime,
-            Mathf.Max(maximumInputSpeed, 0.01f), Time.deltaTime
+            Mathf.Max(maximumInputSpeed, 0.01f), deltaTime
         );
         currentRightHand = Vector3.SmoothDamp(
             currentRightHand, targetRightHand, ref rightHandVelocity, handTime,
-            Mathf.Max(maximumInputSpeed, 0.01f), Time.deltaTime
+            Mathf.Max(maximumInputSpeed, 0.01f), deltaTime
         );
         UpdateCenterGestureServo(
             ref currentLeftCenterForward,
@@ -459,7 +507,8 @@ public sealed class PuppetBoneTest : MonoBehaviour
             ref currentLeftCenterAcceleration,
             ref leftCenterMotionBoost,
             targetLeftCenterForward,
-            targetLeftCenterVelocity
+            targetLeftCenterVelocity,
+            unscaledDeltaTime
         );
         UpdateCenterGestureServo(
             ref currentRightCenterForward,
@@ -467,44 +516,48 @@ public sealed class PuppetBoneTest : MonoBehaviour
             ref currentRightCenterAcceleration,
             ref rightCenterMotionBoost,
             targetRightCenterForward,
-            targetRightCenterVelocity
+            targetRightCenterVelocity,
+            unscaledDeltaTime
         );
         currentHead = Vector3.SmoothDamp(
             currentHead, targetHead, ref headVelocity, headTime,
-            Mathf.Max(maximumInputSpeed, 0.01f), Time.deltaTime
+            Mathf.Max(maximumInputSpeed, 0.01f), deltaTime
         );
         currentBodyPosition = Vector3.SmoothDamp(
             currentBodyPosition, targetBodyPosition, ref bodyPositionVelocity, bodyTime,
-            Mathf.Max(maximumBodySpeed, 0.01f), Time.deltaTime
+            Mathf.Max(maximumBodySpeed, 0.01f), deltaTime
         );
         currentBodyTurn = Mathf.SmoothDamp(
             currentBodyTurn, targetBodyTurn, ref bodyTurnVelocity, bodyTime,
-            Mathf.Max(maximumBodySpeed, 0.01f), Time.deltaTime
+            Mathf.Max(maximumBodySpeed, 0.01f), deltaTime
         );
         currentBodyLean = Mathf.SmoothDamp(
             currentBodyLean, targetBodyLean, ref bodyLeanVelocity, bodyTime,
-            Mathf.Max(maximumBodySpeed, 0.01f), Time.deltaTime
+            Mathf.Max(maximumBodySpeed, 0.01f), deltaTime
         );
         currentLegacyHeadNod = Mathf.SmoothDamp(
             currentLegacyHeadNod, targetLegacyHeadNod, ref legacyHeadVelocity, headTime,
-            Mathf.Max(maximumInputSpeed, 0.01f), Time.deltaTime
+            Mathf.Max(maximumInputSpeed, 0.01f), deltaTime
         );
         currentLegacyLeftArm = Mathf.SmoothDamp(
             currentLegacyLeftArm, targetLegacyLeftArm, ref legacyLeftArmVelocity, handTime,
-            Mathf.Max(maximumInputSpeed, 0.01f), Time.deltaTime
+            Mathf.Max(maximumInputSpeed, 0.01f), deltaTime
         );
         currentLegacyRightArm = Mathf.SmoothDamp(
             currentLegacyRightArm, targetLegacyRightArm, ref legacyRightArmVelocity, handTime,
-            Mathf.Max(maximumInputSpeed, 0.01f), Time.deltaTime
+            Mathf.Max(maximumInputSpeed, 0.01f), deltaTime
         );
 
         ApplyBodyAndHead();
-        ResetArmPose();
+        // Hybrid composes animated ancestors before the live arm IK is solved.
+        composeBody?.Invoke();
+        ResetArmPose(mapLeftArm, mapRightArm);
+        avoidanceDeltaTime = Mathf.Clamp(deltaTime, 0f, .1f);
 
         if (ContinuousIkMode)
-            ApplyContinuousIk();
+            ApplyContinuousIk(mapLeftArm, mapRightArm);
         else
-            ApplyLegacyArms();
+            ApplyLegacyArms(mapLeftArm, mapRightArm);
 
         ApplyAnimationHandoff();
     }
@@ -572,6 +625,9 @@ public sealed class PuppetBoneTest : MonoBehaviour
         rightArmLength = ChainLength(rightArm, rightForeArm, rightHand);
         leftPoleInParent = CalculatePoleInParent(leftArm, leftForeArm, leftHand);
         rightPoleInParent = CalculatePoleInParent(rightArm, rightForeArm, rightHand);
+        bodyAvoidance.Bind(this);
+        LeftAvoidanceBlend = RightAvoidanceBlend = 0f;
+        leftContinuity.valid = rightContinuity.valid = false;
     }
 
     private void SetNeutralTargets()
@@ -641,19 +697,25 @@ public sealed class PuppetBoneTest : MonoBehaviour
         transform.localPosition = animatedPosition;
     }
 
-    private void ResetArmPose()
+    private void ResetArmPose(bool mapLeftArm = true, bool mapRightArm = true)
     {
-        SetLocalRotation(leftShoulder, leftShoulderRest);
-        SetLocalRotation(leftArm, leftArmRest);
-        SetLocalRotation(leftForeArm, leftForeArmRest);
-        SetLocalRotation(leftHand, leftHandRest);
-        SetLocalRotation(rightShoulder, rightShoulderRest);
-        SetLocalRotation(rightArm, rightArmRest);
-        SetLocalRotation(rightForeArm, rightForeArmRest);
-        SetLocalRotation(rightHand, rightHandRest);
+        if (mapLeftArm)
+        {
+            SetLocalRotation(leftShoulder, leftShoulderRest);
+            SetLocalRotation(leftArm, leftArmRest);
+            SetLocalRotation(leftForeArm, leftForeArmRest);
+            SetLocalRotation(leftHand, leftHandRest);
+        }
+        if (mapRightArm)
+        {
+            SetLocalRotation(rightShoulder, rightShoulderRest);
+            SetLocalRotation(rightArm, rightArmRest);
+            SetLocalRotation(rightForeArm, rightForeArmRest);
+            SetLocalRotation(rightHand, rightHandRest);
+        }
     }
 
-    private void ApplyContinuousIk()
+    private void ApplyContinuousIk(bool mapLeftArm = true, bool mapRightArm = true)
     {
         CurrentLeftHandTarget = BuildHandTarget(
             leftArm,
@@ -676,7 +738,8 @@ public sealed class PuppetBoneTest : MonoBehaviour
             out float rightSolveReach
         );
 
-        SolveTwoBone(
+        bodyAvoidance.Refresh(this);
+        if (mapLeftArm) CurrentLeftHandTarget = SolveProtectedArm(
             leftArm,
             leftForeArm,
             leftHand,
@@ -684,10 +747,10 @@ public sealed class PuppetBoneTest : MonoBehaviour
             leftForeArmRest,
             leftPoleInParent,
             CurrentLeftHandTarget,
-            leftSolveReach
+            leftSolveReach, true
         );
 
-        SolveTwoBone(
+        if (mapRightArm) CurrentRightHandTarget = SolveProtectedArm(
             rightArm,
             rightForeArm,
             rightHand,
@@ -695,19 +758,166 @@ public sealed class PuppetBoneTest : MonoBehaviour
             rightForeArmRest,
             rightPoleInParent,
             CurrentRightHandTarget,
-            rightSolveReach
+            rightSolveReach, false
         );
+        if (!mapLeftArm) { LeftAvoidanceBlend = 0; leftContinuity.valid = false; }
+        if (!mapRightArm) { RightAvoidanceBlend = 0; rightContinuity.valid = false; }
     }
 
-    private void ApplyLegacyArms()
+    private Vector3 SolveProtectedArm(Transform upper, Transform lower, Transform end,
+        Quaternion upperRest, Quaternion lowerRest, Vector3 pole, Vector3 target, float reach, bool left)
     {
-        if (leftArm != null)
+        if (!upper || !lower || !end) return target;
+        void Solve(Vector3 point)
+        {
+            upper.localRotation = upperRest;
+            lower.localRotation = lowerRest;
+            SolveTwoBone(upper, lower, end, upperRest, lowerRest, pole, point, reach);
+        }
+        Solve(target);
+        if (!avoidBody || !bodyAvoidance.Ready)
+        {
+            (left ? leftContinuity : rightContinuity).valid = false;
+            if (left) { LeftAvoidanceBlend = 0; LeftBodyPenetration = 0; }
+            else { RightAvoidanceBlend = 0; RightBodyPenetration = 0; }
+            return target;
+        }
+
+        // Search on the same continuous target arc toward the supported sleeve pose.
+        // Validate the actual joints AFTER angle clamps, including the rigid sword proxy.
+        float length = left ? leftArmLength : rightArmLength;
+        float side = left ? -1f : 1f;
+        Vector3 anchor = upper.position + (transform.right * side * .96f - transform.up * .25f
+            + transform.forward * .12f).normalized * length * Mathf.Min(idleArmReach, reach);
+        float tolerance = bodyAvoidance.span * .0001f;
+        float Overlap() => bodyAvoidance.Penetration(upper, lower, end, left, avoidancePadding);
+        float bestOverlap = Overlap(), required = 0f;
+        if (bestOverlap > tolerance)
+        {
+            float low = 0f;
+            for (int step = 1; step <= 16; step++)
+            {
+                float blend = step / 16f;
+                Solve(Vector3.Lerp(target, anchor, blend));
+                float overlap = Overlap();
+                if (overlap < bestOverlap) { bestOverlap = overlap; required = blend; }
+                if (overlap <= tolerance)
+                {
+                    float high = blend;
+                    for (int iteration = 0; iteration < 9; iteration++)
+                    {
+                        float middle = (low + high) * .5f;
+                        Solve(Vector3.Lerp(target, anchor, middle));
+                        if (Overlap() <= tolerance) high = middle;
+                        else low = middle;
+                    }
+                    required = high;
+                    break;
+                }
+                low = blend;
+            }
+        }
+        float previous = left ? LeftAvoidanceBlend : RightAvoidanceBlend;
+        float released = Mathf.Lerp(previous, required,
+            1f - Mathf.Exp(-avoidanceDeltaTime / Mathf.Max(.02f, avoidanceReleaseTime)));
+        float applied = Mathf.Max(required, released);
+        Vector3 corrected = Vector3.Lerp(target, anchor, applied);
+        Solve(corrected);
+        // More correction is not necessarily safer for a long held prop.
+        if (Overlap() > Mathf.Max(tolerance, bestOverlap + tolerance))
+        {
+            applied = required;
+            corrected = Vector3.Lerp(target, anchor, applied);
+            Solve(corrected);
+        }
+        LimitAvoidanceStep(upper, lower, end, left, applied > .001f || previous > .001f, tolerance);
+        if (left) { LeftAvoidanceBlend = applied; LeftBodyPenetration = Overlap(); }
+        else { RightAvoidanceBlend = applied; RightBodyPenetration = Overlap(); }
+        return corrected;
+    }
+
+    private void LimitAvoidanceStep(Transform upper, Transform lower, Transform end,
+        bool left, bool avoiding, float tolerance)
+    {
+        ArmContinuity history = left ? leftContinuity : rightContinuity;
+        Quaternion requestedUpper = upper.localRotation, requestedLower = lower.localRotation;
+        if (history.valid && (avoiding || history.constrained))
+        {
+            float angle = Mathf.Max(Quaternion.Angle(history.upper, requestedUpper),
+                Quaternion.Angle(history.lower, requestedLower));
+            float weight = angle > .0001f ? Mathf.Min(1f,
+                Mathf.Max(60f, avoidanceAngularSpeed) * avoidanceDeltaTime / angle) : 1f;
+            void Apply(float t)
+            {
+                upper.localRotation = Quaternion.Slerp(history.upper, requestedUpper, t);
+                lower.localRotation = Quaternion.Slerp(history.lower, requestedLower, t);
+            }
+            float Penetration() => bodyAvoidance.Penetration(upper, lower, end, left, avoidancePadding);
+            Apply(0);
+            float initialOverlap = Penetration();
+            float accepted = 0, bestOverlap = initialOverlap;
+            // Check the interpolated bones, not just the destination. A blade may
+            // cross the torso even when both endpoint poses are clear.
+            for (int step = 1; step <= 8; step++)
+            {
+                float t = weight * step / 8f;
+                Apply(t);
+                float overlap = Penetration();
+                if (overlap <= tolerance || (initialOverlap > tolerance && overlap < bestOverlap))
+                {
+                    accepted = t; bestOverlap = overlap;
+                }
+                else
+                {
+                    if (initialOverlap <= tolerance)
+                    {
+                        float low = accepted, high = t;
+                        for (int iteration = 0; iteration < 8; iteration++)
+                        {
+                            float middle = (low + high) * .5f;
+                            Apply(middle);
+                            if (Penetration() <= tolerance) low = middle;
+                            else high = middle;
+                        }
+                        accepted = low;
+                    }
+                    break;
+                }
+            }
+            Apply(accepted);
+            history.constrained = accepted < .999f;
+        }
+        else history.constrained = false;
+        history.upper = upper.localRotation;
+        history.lower = lower.localRotation;
+        history.valid = true;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (!showAvoidanceGizmos || !bodyAvoidance.Ready) return;
+        Gizmos.color = new Color(0f, 1f, .8f, .5f);
+        DrawProtection(bodyAvoidance.torso);
+        Gizmos.color = new Color(1f, .8f, 0f, .5f);
+        DrawProtection(bodyAvoidance.skull);
+    }
+
+    private static void DrawProtection(PuppetBodyAvoidance.Capsule capsule)
+    {
+        Gizmos.DrawWireSphere(capsule.a, capsule.radius);
+        Gizmos.DrawWireSphere(capsule.b, capsule.radius);
+        Gizmos.DrawLine(capsule.a, capsule.b);
+    }
+
+    private void ApplyLegacyArms(bool mapLeftArm = true, bool mapRightArm = true)
+    {
+        if (mapLeftArm && leftArm != null)
             leftArm.localRotation = leftArmRest * Quaternion.Euler(
                 0f,
                 0f,
                 currentLegacyLeftArm * armRaiseDegrees
             );
-        if (rightArm != null)
+        if (mapRightArm && rightArm != null)
             rightArm.localRotation = rightArmRest * Quaternion.Euler(
                 0f,
                 0f,
@@ -820,10 +1030,11 @@ public sealed class PuppetBoneTest : MonoBehaviour
         ref float acceleration,
         ref float motionBoost,
         float target,
-        float inputVelocity
+        float inputVelocity,
+        float stepDeltaTime
     )
     {
-        float frameDelta = Mathf.Min(Time.unscaledDeltaTime, 0.05f);
+        float frameDelta = Mathf.Min(stepDeltaTime, 0.05f);
         int steps = Mathf.Max(1, Mathf.CeilToInt(frameDelta * 120f));
         float deltaTime = frameDelta / steps;
 

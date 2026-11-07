@@ -1,0 +1,12 @@
+{
+  "replacedActorMeshes": 34,
+  "newActorMeshes": 34,
+  "cameraUnchanged": true,
+  "nonActorGeometryUnchanged": true,
+  "exposure": -0.29999998211860657,
+  "poses": {
+    "hero": "Existing ALERT action at 1.5 seconds over relaxed mapping input",
+    "musician": "Existing LANDSCAPE / slow-playing action at 1.5 seconds"
+  },
+  "scope": "Static Blender showcase only. Production rig, controller settings, scenes and WebGL unchanged."
+}

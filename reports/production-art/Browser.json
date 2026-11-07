@@ -1,0 +1,67 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "players": 1,
+      "mode": "gesture",
+      "scene": "SoloGesture",
+      "ready": true,
+      "pauseResume": true,
+      "desktop": "1-gesture.png",
+      "mobile": true,
+      "syntheticMovement": false
+    },
+    {
+      "players": 1,
+      "mode": "mapping",
+      "scene": "SoloMapping",
+      "ready": true,
+      "pauseResume": true,
+      "desktop": "1-mapping.png",
+      "mobile": true,
+      "syntheticMovement": true
+    },
+    {
+      "players": 1,
+      "mode": "hybrid",
+      "scene": "SoloHybrid",
+      "ready": true,
+      "pauseResume": true,
+      "desktop": "1-hybrid.png",
+      "mobile": true,
+      "syntheticMovement": true
+    },
+    {
+      "players": 2,
+      "mode": "gesture",
+      "scene": "DuetGesture",
+      "ready": true,
+      "pauseResume": true,
+      "desktop": "2-gesture.png",
+      "mobile": true,
+      "syntheticMovement": false
+    },
+    {
+      "players": 2,
+      "mode": "mapping",
+      "scene": "DuetMapping",
+      "ready": true,
+      "pauseResume": true,
+      "desktop": "2-mapping.png",
+      "mobile": true,
+      "syntheticMovement": true
+    },
+    {
+      "players": 2,
+      "mode": "hybrid",
+      "scene": "DuetHybrid",
+      "ready": true,
+      "pauseResume": true,
+      "desktop": "2-hybrid.png",
+      "mobile": true,
+      "syntheticMovement": true
+    }
+  ],
+  "errors": [],
+  "scope": "Actual WebGL and local Flask, fake camera. No real hand or animation naturalness acceptance."
+}

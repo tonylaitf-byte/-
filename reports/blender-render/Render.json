@@ -1,0 +1,12 @@
+{
+  "engine": "Cycles",
+  "samples": 96,
+  "device": "OPTIX",
+  "resolution": [
+    1600,
+    900
+  ],
+  "objects": 691,
+  "materials": 51,
+  "scope": "Static posed production-scene geometry with Blender PBR approximations and new offline lighting; not a live rig or pixel-identical Unity shader conversion."
+}

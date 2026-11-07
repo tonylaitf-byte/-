@@ -32,6 +32,9 @@ namespace PalmTheatre.Integration
             public int players, actors, sequence, queued;
             public bool ready, paused, speaking;
             public float leftX, rightX;
+            public bool actionActive;
+            public int actionSequence, inputEpoch;
+            public HybridActorStatus leftHybrid, rightHybrid;
         }
         public Configuration Config { get; private set; }
         public bool Ready { get; private set; }
@@ -44,6 +47,7 @@ namespace PalmTheatre.Integration
         ActionVoicePresenter voice;
         DuetGestureSession duet;
         DuetMappingSession mapping;
+        HybridTheatreSession hybrid;
         Coroutine loading;
         int actionSequence;
         float lastInput = float.NegativeInfinity, nextStatus;
@@ -64,7 +68,7 @@ namespace PalmTheatre.Integration
             catch (ArgumentException) { return; }
             if (config == null || string.IsNullOrEmpty(config.sessionId) ||
                 (config.players != 1 && config.players != 2) ||
-                (config.mode != "gesture" && config.mode != "mapping") || loading != null) return;
+                (config.mode != "gesture" && config.mode != "mapping" && config.mode != "hybrid") || loading != null) return;
             loading = StartCoroutine(Load(config));
         }
         IEnumerator Load(Configuration config)
@@ -76,12 +80,18 @@ namespace PalmTheatre.Integration
             lastInput = float.NegativeInfinity; disconnected = true;
             PublishStatus();
             string scene = (config.players == 1 ? "Solo" : "Duet") +
-                (config.mode == "gesture" ? "Gesture" : "Mapping");
+                (config.mode == "gesture" ? "Gesture" : config.mode == "hybrid" ? "Hybrid" : "Mapping");
             yield return SceneManager.LoadSceneAsync(scene);
             // Let each existing controller complete its Start-time rig binding.
             yield return null;
-            solo = null; soloActor = null; actions = null; voice = null; duet = null; mapping = null;
-            if (config.players == 1)
+            solo = null; soloActor = null; actions = null; voice = null; duet = null; mapping = null; hybrid = null;
+            if (config.mode == "hybrid")
+            {
+                hybrid = FindAnyObjectByType<HybridTheatreSession>();
+                if (!hybrid || hybrid.ActorCount != config.players || !hybrid.Initialize())
+                    Error = hybrid && !string.IsNullOrEmpty(hybrid.Error) ? hybrid.Error : "Hybrid stage is incomplete.";
+            }
+            else if (config.players == 1)
             {
                 solo = FindAnyObjectByType<PuppetBoneTest>();
                 soloActor = FindAnyObjectByType<PuppetController>();
@@ -105,12 +115,19 @@ namespace PalmTheatre.Integration
         }
         public void ReceiveState(string json)
         {
-            if (!Ready || Paused) return;
+            if (!Ready || (Paused && !hybrid)) return;
             try
             {
                 var packet = JsonUtility.FromJson<InputEnvelope>(json);
                 if (packet == null || packet.sessionId != Config.sessionId || packet.sequence <= LastSequence) return;
-                if (solo)
+                if (hybrid)
+                {
+                    bool accepted = Config.players == 1 ?
+                        hybrid.AcceptSolo(JsonUtility.FromJson<PuppetControlState>(packet.state)) :
+                        hybrid.AcceptDuet(JsonUtility.FromJson<HybridDuetState>(packet.state));
+                    if (!accepted) return;
+                }
+                else if (solo)
                 {
                     var state = JsonUtility.FromJson<PuppetControlState>(packet.state);
                     if (state == null || state.version != 2 || state.controlMode != Config.mode) return;
@@ -144,12 +161,14 @@ namespace PalmTheatre.Integration
             if (solo) solo.ClearExternalInput();
             if (duet) duet.MarkDisconnected();
             if (mapping) mapping.MarkDisconnected();
+            if (hybrid) hybrid.MarkDisconnected();
         }
         public void SetPaused(string value)
         {
             Paused = value == "true";
             if (duet) duet.SetPaused(Paused);
             if (mapping) mapping.SetFrozen(Paused);
+            if (hybrid) hybrid.SetPaused(Paused);
             if (solo) solo.enabled = !Paused;
             if (voice) voice.SetPaused(Paused);
             Time.timeScale = Paused ? 0 : 1;
@@ -162,9 +181,10 @@ namespace PalmTheatre.Integration
             // existing OnDisable methods restore poses and need live children.
             if (duet) duet.enabled = false;
             if (mapping) mapping.enabled = false;
+            if (hybrid) hybrid.enabled = false;
             if (actions) actions.StopAllCoroutines();
             if (voice) voice.enabled = false;
-            solo = null; soloActor = null; actions = null; voice = null; duet = null; mapping = null;
+            solo = null; soloActor = null; actions = null; voice = null; duet = null; mapping = null; hybrid = null;
         }
         public void EndPerformance(string unused)
         {
@@ -178,20 +198,27 @@ namespace PalmTheatre.Integration
         public void ToggleInstrument(string unused)
         {
             if (mapping) mapping.rightMusician.SetInstrumentVisible(!mapping.rightMusician.showInstrument);
+            if (hybrid && hybrid.rightActor) hybrid.rightActor.SetInstrumentVisible(!hybrid.rightActor.showInstrument);
         }
         public Status ReadStatus()
         {
-            string subtitle = voice ? voice.CurrentSubtitle : duet ? duet.Subtitle : "";
-            if (!string.IsNullOrEmpty(subtitle)) subtitle = (voice ? "俠客" : duet.Speaker.characterName) + "：" + subtitle;
+            string subtitle = voice ? voice.CurrentSubtitle : duet ? duet.Subtitle : hybrid ? hybrid.Subtitle : "";
+            if (!string.IsNullOrEmpty(subtitle)) subtitle = (voice ? "俠客" : duet ? duet.Speaker.characterName : hybrid.SpeakerName) + "：" + subtitle;
+            var leftHybrid = hybrid && hybrid.leftActor ? hybrid.leftActor.ReadStatus() : null;
+            var rightHybrid = hybrid && hybrid.rightActor ? hybrid.rightActor.ReadStatus() : null;
             return new Status {
                 sessionId = Config?.sessionId ?? "", players = Config?.players ?? 0, mode = Config?.mode ?? "",
                 scene = SceneManager.GetActiveScene().name, ready = Ready, paused = Paused, error = Error,
-                subtitle = subtitle, speaking = voice ? voice.IsPlaying : duet && duet.Speaker != null,
-                action = soloActor ? soloActor.CurrentAction : duet && duet.Speaker != null ? duet.Speaker.CurrentLine.displayName : "",
-                actors = solo ? 1 : duet || mapping ? 2 : 0, sequence = LastSequence,
+                subtitle = subtitle, speaking = voice ? voice.IsPlaying : duet ? duet.Speaker != null : hybrid && hybrid.Speaker != null,
+                action = soloActor ? soloActor.CurrentAction : duet && duet.Speaker != null ? duet.Speaker.CurrentLine.displayName :
+                    hybrid && hybrid.Speaker ? hybrid.Speaker.ActiveAction?.actionId ?? "" : leftHybrid?.action ?? "",
+                actors = hybrid ? hybrid.ActorCount : solo ? 1 : duet || mapping ? 2 : 0, sequence = LastSequence,
                 queued = actions ? actions.PendingActionCount : 0,
-                leftX = solo ? solo.transform.position.x : duet ? duet.leftActor.transform.position.x : mapping ? mapping.leftWarrior.transform.position.x : 0,
-                rightX = duet ? duet.rightActor.transform.position.x : mapping ? mapping.rightMusician.transform.position.x : 0
+                leftX = hybrid ? hybrid.leftActor.transform.position.x : solo ? solo.transform.position.x : duet ? duet.leftActor.transform.position.x : mapping ? mapping.leftWarrior.transform.position.x : 0,
+                rightX = hybrid && hybrid.rightActor ? hybrid.rightActor.transform.position.x : duet ? duet.rightActor.transform.position.x : mapping ? mapping.rightMusician.transform.position.x : 0,
+                actionActive = (leftHybrid?.actionActive ?? false) || (rightHybrid?.actionActive ?? false),
+                actionSequence = leftHybrid?.actionSequence ?? actionSequence, inputEpoch = leftHybrid?.inputEpoch ?? 0,
+                leftHybrid = leftHybrid, rightHybrid = rightHybrid
             };
         }
         void Update()

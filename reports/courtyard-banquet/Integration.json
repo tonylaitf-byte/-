@@ -1,0 +1,21 @@
+{
+    "scene": "Assets/IntegratedTheatre/Scenes/CourtyardBanquetPreview.unity",
+    "model": "Assets/Environment/CourtyardBanquet/courtyard_banquet_v1.fbx",
+    "sourceBlend": "ArtSources/CourtyardBanquet/courtyard_banquet_v1.blend",
+    "boundsCenter": {
+        "x": 0.1503314971923828,
+        "y": -0.08547192811965943,
+        "z": -0.9550001621246338
+    },
+    "boundsSize": {
+        "x": 7.412662506103516,
+        "y": 1.1018273830413819,
+        "z": 1.950000286102295
+    },
+    "meshRenderers": 28,
+    "materialSlots": 50,
+    "triangles": 30652,
+    "additionalHouseOutward": 0.550000011920929,
+    "originalScenesUnchanged": true,
+    "webGLRebuilt": false
+}

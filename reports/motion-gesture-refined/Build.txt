@@ -1,0 +1,14 @@
+PASS: 13 clips; asset GUIDs preserved; finite rotation-only keys; left sword arm; two hybrid masks updated.
+Assets/Animations/Bow.anim
+Assets/Animations/Landscape.anim
+Assets/Animations/Drink.anim
+Assets/Animations/Alert.anim
+Assets/Animations/Attack.anim
+Assets/YueXian/ActionTest/Animations/Greeting.anim
+Assets/YueXian/ActionTest/Animations/SlowIntro.anim
+Assets/YueXian/ActionTest/Animations/SlowLoop.anim
+Assets/YueXian/ActionTest/Animations/Pause.anim
+Assets/YueXian/ActionTest/Animations/Challenge.anim
+Assets/YueXian/ActionTest/Animations/FastIntro.anim
+Assets/YueXian/ActionTest/Animations/FastLoop.anim
+Assets/YueXian/ActionTest/Animations/FastExit.anim

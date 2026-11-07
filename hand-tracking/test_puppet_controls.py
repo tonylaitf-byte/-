@@ -47,8 +47,8 @@ class PuppetControlsTests(unittest.TestCase):
     def calibrated_pipeline(self, landmarks=None, samples=3):
         landmarks = landmarks or self.make_landmarks()
         pipeline = PuppetControlPipeline(alpha=1.0, calibration_samples=samples)
-        for _ in range(samples):
-            pipeline.update(landmarks)
+        for index in range(samples):
+            pipeline.update(landmarks, timestamp=index / 30)
         self.assertTrue(pipeline.calibrated)
         return pipeline
 

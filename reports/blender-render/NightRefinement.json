@@ -1,0 +1,14 @@
+{
+  "geometryUnchanged": true,
+  "cameraUnchanged": true,
+  "exposure": -0.6499999761581421,
+  "worldStrength": 0.03500000014901161,
+  "addedLights": 6,
+  "faceAccentWatts": 15,
+  "handAccentWatts": 4,
+  "floorRoughnessRange": [
+    0.18,
+    0.78
+  ],
+  "scope": "Blender-only character light accents and stone material refinement. Unity unchanged."
+}

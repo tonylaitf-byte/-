@@ -6,6 +6,8 @@
   "scripts": {
     "test:browser": "node tests/browser_validation.cjs",
     "test:camera": "node tests/camera_latency_validation.cjs",
+    "test:hybrid": "node tests/hybrid_browser_validation.cjs",
+    "test:motion": "node tests/compare_hybrid_motion.cjs",
     "benchmark": "node tests/performance_benchmark.cjs"
   },
   "devDependencies": {

@@ -1,5 +1,6 @@
 import math
 import time
+import itertools
 
 
 GESTURE_ACTIONS = {
@@ -9,6 +10,8 @@ GESTURE_ACTIONS = {
     4: "ALERT",
     5: "ATTACK",
 }
+
+_input_epochs = itertools.count(1)
 
 
 def gesture_horizontal_target(landmarks, center=0.5, dead_zone=0.08, edge=0.38):
@@ -162,3 +165,80 @@ class GestureActionRecognizer:
             "triggeredAction": triggered_action,
             "actionSequence": self.action_sequence,
         }
+
+
+class HybridGestureActionRecognizer(GestureActionRecognizer):
+    """Confirmed events only, with a tracked neutral pose before every action."""
+
+    def __init__(self, hold_seconds=0.5, cooldown_seconds=3.0, neutral_seconds=0.2):
+        self.neutral_seconds = max(0.0, float(neutral_seconds))
+        super().__init__(hold_seconds, cooldown_seconds)
+
+    def reset(self):
+        super().reset()
+        self.action_sequence = 0
+        # Allocated across recognizer replacements, never reused within a session.
+        self.input_epoch = next(_input_epochs)
+        self.suspend()
+
+    def suspend(self):
+        """Drop unfinished input without replaying or forgetting confirmed events."""
+        self.armed = False
+        self.neutral_since = None
+        self.candidate = 0
+        self.candidate_since = None
+        self.gesture = 0
+        self.hold_progress = 0.0
+        self.triggered_action = ""
+
+    def snapshot(self):
+        return {
+            "gesture": self.gesture,
+            "gestureHold": round(self.hold_progress, 4),
+            "gestureArmed": self.armed,
+            "detectedAction": self.last_action,
+            "triggeredAction": self.triggered_action,
+            "action": self.last_action,
+            "actionSequence": self.action_sequence,
+            "inputEpoch": self.input_epoch,
+        }
+
+    def update(self, landmarks, timestamp=None, enabled=True):
+        now = time.monotonic() if timestamp is None else float(timestamp)
+        tracked = landmarks is not None and len(landmarks) >= 21
+        gesture = classify_counting_gesture(landmarks) if tracked else 0
+        self.triggered_action = ""
+        if not enabled or not tracked:
+            self.suspend()
+            return self.snapshot()
+
+        self.gesture = gesture
+        self.hold_progress = 0.0
+        if gesture == 0:
+            self.candidate = 0
+            self.candidate_since = None
+            if self.neutral_since is None:
+                self.neutral_since = now
+            if now - self.neutral_since + 1e-9 >= self.neutral_seconds:
+                self.armed = True
+        else:
+            self.neutral_since = None
+            if not self.armed:
+                self.candidate = 0
+                self.candidate_since = None
+            else:
+                if gesture != self.candidate:
+                    self.candidate = gesture
+                    self.candidate_since = now
+                held = max(0.0, now - self.candidate_since)
+                self.hold_progress = min(1.0, held / self.hold_seconds)
+                if held + 1e-9 >= self.hold_seconds:
+                    action = GESTURE_ACTIONS.get(gesture, "")
+                    previous = self.last_trigger_time.get(action, float("-inf"))
+                    if action and now - previous + 1e-9 >= self.cooldown_seconds:
+                        self.action_sequence += 1
+                        self.last_action = action
+                        self.last_trigger_time[action] = now
+                        self.triggered_action = action
+                        self.armed = False
+        return self.snapshot()

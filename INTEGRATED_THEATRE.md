@@ -4,11 +4,14 @@
 
 ## 操作流程
 
-1. 首頁只選 **一人／兩人** 及 **手勢動作／手部映射**，按「進入舞台」。
+1. 首頁選 **一人／兩人** 及 **手勢動作／手部映射／Hybrid 混合操控**，按「進入舞台」。
 2. 舞台載入後自動嘗試開啟攝影機；首次請允許攝影機存取。拒絕權限時可以按「開啟鏡頭」重試。程式不開啟麥克風。
 3. 單人固定為俠客；雙人固定左俠客、右琴師。每人使用一隻手，左右手皆可。
 4. 手勢模式維持指定手勢 0.5 秒，觸發動作、既有台語錄音與中文字幕。雙人語音輪流播放。
 5. 映射模式先保持自然手勢約 1.5 秒，校正後控制頭部、雙臂及身體。雙人可分別重新校正；此模式沿用即時操偶行為，不自動觸發整段台詞。
+6. Hybrid 模式同時提供連續映射及手勢事件；手勢辨識不停止映射更新。詳見 [HYBRID_MODE.md](HYBRID_MODE.md)。
+
+三種控制模式均支援單人及雙人，整合版共六種演出組合。Hybrid 每人維持既有角色：單人俠客；雙人左俠客、右琴師。
 
 桌面配置為舞台約 75%、右側辨識區約 25%；字幕在舞台下方。小視窗與手機改為上下排列。沿用月夜廟宇、原背景音樂、俠客與琴師的既有模型和動作。
 
@@ -20,7 +23,7 @@
 
 ## 場景與資料生命週期
 
-- 同一份 WebGL 內含入口及四個演出場景，選項經確認後才開放辨識輸入。
+- 同一份 WebGL 內含入口及六個演出場景：Solo／Duet 各有 Gesture、Mapping、Hybrid。選項經確認後才開放辨識輸入。
 - 每次開始／重置產生新演出識別，清除舊手勢、角色歸屬及校正；Unity 重載本模式場景，清除舊語音、字幕及動作。
 - 返回設定會停止攝影機與演出。不同頁面同時操作時，以最後開始的整合演出為準，舊頁面會停止輸入並提示。
 - 請只開一個正在演出的頁面。整合演出進行中，舊獨立辨識頁無法改寫人數／模式；返回設定後可繼續使用舊測試頁。
@@ -35,11 +38,24 @@
 - Unity `PuppetArchitectureMaterialPass` 允許重新建立卸載後的材質快取，支援多次進出演出。
 - WebGL 成品在 `hand-tracking/static/theatre/`；舊 `static/unity/` 保留。
 
-Unity 選單「掌中智戲 → 整合舞台 → 建置 WebGL」可重建四種模式，不重新製作原角色或動畫。建置輸出也可使用 `THEATRE_BUILD_OUTPUT` 環境變數指定。
+Unity 選單「掌中智戲 → 整合舞台 → 建置 WebGL」或根目錄 `Build-IntegratedTheatre.bat`／`Build-IntegratedTheatre.ps1` 可重建六種模式，不重新製作原角色或動畫。PowerShell 腳本可用 `-UnityPath` 指定 Unity Editor。建置輸出預設為 `hand-tracking/static/theatre/`。舊 `Build-WebGL.bat` 是獨立測試舞台的舊入口，不是整合舞台建置入口。
+
+Unity 原始碼更新後須重建整合 WebGL；獨立網頁 JS/CSS 更新後重新載入即可。本工作副本已於 2026-10-23 完成新版 WebGL 建置，Python 62 項、原四組瀏覽器模式與兩組 Hybrid 模擬輸入測試通過。詳見 [HYBRID_PROGRESS.md](HYBRID_PROGRESS.md)，其中另列完整 Editor 驗收的搜尋索引例外及真人鏡頭待驗項目。
+
+## Hybrid 驗收追蹤
+
+- [x] 文件契約已定義：三模式保留、單／雙人、辨識／事件生命週期、動畫部位交接；細節見 [HYBRID_MODE.md](HYBRID_MODE.md)。
+- [x] Python baseline 50 項、Hybrid 12 項測試及 Unity baseline compile 通過。
+- [x] Hybrid 後端事件測試與單雙人 WebGL 模擬輸入驗證通過；部位 mask 與雙人語音檢查另見 Editor 報告及其環境異常說明。
+- [x] 成功建置含六種模式的 WebGL，記錄建置結果與輸出版本。
+- [x] 用模擬輸入完成單／雙人瀏覽器端到端測試。
+- [ ] 真人鏡頭／手勢成功率與動作品質驗收。
+
+核對狀態時以新版本實際執行結果為準，不得沿用舊報告替未完成項目打勾。
 
 ## 驗證範圍
 
-`reports/BrowserValidation.json` 記錄實際 WebGL 場景、角色數、輸入、暫停、重置及鏡頭拒絕後重試測試；`YueXianWorkspace/IntegrationReports/Build.json` 記錄 Unity 建置結果。
+`reports/BrowserValidation.json` 已以新版 WebGL 重跑，涵蓋原四組模式、40 次重置、暫停、鏡頭拒絕後重試及媒體釋放。Hybrid 另見 `HybridBackendValidation.json`、`HybridBuildValidation.json`、`HybridBrowserValidation.json`；`HybridEditorValidation.json` 保留整體未通過結果及各功能檢查旗標。先前效能基準仍屬舊版，不代表本次重新量測。
 
 `tests/performance_benchmark.cjs` 以相同 Unity 舞台、1440×1000 視窗、1.5 倍像素比例與 Chrome 模擬鏡頭量測每種人數 15 秒。改善前後數據存於 `reports/Performance-baseline.json` 與 `reports/Performance-optimized.json`。此模擬鏡頭約 20 FPS；真人鏡頭幀率依設備與光線而異。
 

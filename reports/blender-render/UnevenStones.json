@@ -1,0 +1,12 @@
+{
+  "slabs": 567,
+  "originalFloorHeight": -0.6313848495483398,
+  "topOffsetRangeMeters": [
+    -0.039195612144488884,
+    0.05319352653839166
+  ],
+  "protectedFootAndFeastZoneLevel": true,
+  "otherGeometryUnchanged": true,
+  "cameraUnchanged": true,
+  "scope": "Actual slab geometry with irregular edges, staggered sizes and elevation. Blender only; Unity unchanged."
+}

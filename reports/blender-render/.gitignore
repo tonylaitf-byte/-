@@ -1,0 +1,4 @@
+# Regenerable, uncompressed scene transfer; exceeds GitHub's per-file limit.
+scene-snapshot.json
+display-pose-snapshot.json
+*.blend1

@@ -9,12 +9,15 @@ import numpy as np
 from flask import Flask, Response, jsonify, render_template, request
 
 import lapf as core
-from gesture_recognizer import GestureActionRecognizer, GestureMovementTracker
+from gesture_recognizer import GestureActionRecognizer, GestureMovementTracker, HybridGestureActionRecognizer
 from duet_tracking import DuetHandRouter
 from duet_mapping_tracking import DuetMappingRouter
+from hand_identity import StableHandedness
+from api_input import install_json_errors, json_object
 
 
 app = Flask(__name__)
+install_json_errors(app)
 app.config["MAX_CONTENT_LENGTH"] = int(
     os.environ.get("MAX_CAMERA_FRAME_BYTES", str(2 * 1024 * 1024))
 )
@@ -28,6 +31,12 @@ control_mode_lock = threading.Lock()
 control_mode = "mapping"
 gesture_recognizer = GestureActionRecognizer(hold_seconds=0.5, cooldown_seconds=3.0)
 gesture_movement = GestureMovementTracker(response_speed=8.0)
+hybrid_recognizer = HybridGestureActionRecognizer()
+hybrid_owner = None
+hybrid_owner_visible = False
+hybrid_last_seen = None
+hybrid_lost_grace = 1.0
+solo_identity = StableHandedness()
 duet_router = DuetHandRouter(lost_grace=1.0)
 duet_state_lock = threading.Lock()
 duet_state = duet_router.update([])
@@ -37,12 +46,18 @@ duet_mapping_state_lock = threading.Lock()
 duet_mapping_state = duet_mapping_router.update([])
 
 
-def publish_duet_mapping_state(observations, timestamp):
+def publish_duet_mapping_state(observations, timestamp, frame_size=None):
     global duet_mapping_state
-    state = duet_mapping_router.update(observations, timestamp)
+    state = duet_mapping_router.update(observations, timestamp, frame_size=frame_size)
     with duet_mapping_state_lock:
         duet_mapping_state = state
     return state
+
+
+def refresh_duet_mapping_state():
+    global duet_mapping_state
+    with duet_mapping_state_lock:
+        duet_mapping_state = duet_mapping_router.snapshot()
 
 
 def publish_duet_state(observations, timestamp):
@@ -72,6 +87,30 @@ def publish_gesture_state(result=None, movement_x=0.0):
                 "gestureMoveX": round(float(movement_x), 4),
             }
         )
+
+
+def reset_solo_hybrid():
+    global hybrid_owner, hybrid_owner_visible, hybrid_last_seen, solo_identity
+    hybrid_recognizer.reset()
+    hybrid_owner = None
+    hybrid_owner_visible = False
+    hybrid_last_seen = None
+    solo_identity = StableHandedness()
+
+
+def expire_solo_hybrid(timestamp):
+    if hybrid_last_seen is not None and timestamp - hybrid_last_seen > hybrid_lost_grace:
+        reset_solo_hybrid()
+        with core.pipeline_lock:
+            core.pipeline.reset_calibration()
+
+
+def publish_hybrid_state(result=None):
+    result = hybrid_recognizer.snapshot() if result is None else result
+    with core.state_lock:
+        core.puppet_state.update(controlMode='hybrid', **{
+            key: result[key] for key in ('gesture', 'gestureHold', 'gestureArmed',
+                                        'action', 'actionSequence', 'inputEpoch')})
 
 
 def annotate_frame(frame, state):
@@ -116,6 +155,7 @@ def annotate_frame(frame, state):
 def process_browser_frame(frame, render_preview=True):
     global browser_stream_active
     global last_browser_frame_time
+    global hybrid_owner, hybrid_owner_visible, hybrid_last_seen
 
     timestamp = time.monotonic()
     brightness, _, visible = core.camera_frame_metrics(frame)
@@ -131,32 +171,37 @@ def process_browser_frame(frame, render_preview=True):
 
     # Match the mirrored controller view used by the original native-camera app.
     frame = cv2.flip(frame, 1)
+    frame_size = (frame.shape[1], frame.shape[0])
     mode = get_control_mode()
     global duet_hands
-    if mode in ("duet", "duet_mapping") and duet_hands is None:
+    if mode in ("duet", "duet_mapping", "duet_hybrid") and duet_hands is None:
         duet_hands = core.mp_hands.Hands(
             static_image_mode=False, max_num_hands=2, model_complexity=core.model_complexity,
             min_detection_confidence=0.7, min_tracking_confidence=0.7,
         )
-    detector = duet_hands if mode in ("duet", "duet_mapping") else core.hands
+    detector = duet_hands if mode in ("duet", "duet_mapping", "duet_hybrid") else core.hands
     results = (
         detector.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         if visible
         else None
     )
 
-    if mode in ("duet", "duet_mapping"):
+    if mode in ("duet", "duet_mapping", "duet_hybrid"):
         observations = []
         if results is not None and results.multi_hand_landmarks:
             for index, landmarks in enumerate(results.multi_hand_landmarks):
                 handedness = results.multi_handedness[index].classification[0].label if results.multi_handedness else ""
-                observations.append({'landmarks': landmarks.landmark, 'handedness': handedness})
+                confidence = (getattr(results.multi_handedness[index].classification[0], 'score', 1.0)
+                              if results.multi_handedness else 0.0)
+                observations.append({'landmarks': landmarks.landmark, 'handedness': handedness,
+                                     'confidence': confidence})
                 if render_preview:
                     core.mp_draw.draw_landmarks(frame, landmarks, core.mp_hands.HAND_CONNECTIONS)
-        routed = (publish_duet_mapping_state(observations, timestamp) if mode == "duet_mapping"
+        routed = (publish_duet_mapping_state(observations, timestamp, frame_size) if mode in ("duet_mapping", "duet_hybrid")
                   else publish_duet_state(observations, timestamp))
         core.set_puppet_state(bool(observations), core.CONTROL_DEFAULTS.copy(), sample_time=timestamp)
-        publish_gesture_state()
+        if mode != "duet_hybrid":
+            publish_gesture_state()
         if render_preview:
             height, width = frame.shape[:2]
             cv2.rectangle(frame, (int(width*.45), 0), (int(width*.55), height), (45, 45, 45), -1)
@@ -165,7 +210,7 @@ def process_browser_frame(frame, render_preview=True):
             for side, x in (('left', 12), ('right', int(width*.57))):
                 role = "WARRIOR" if side == 'left' else "MUSICIAN"
                 item = routed[side]
-                detail = (f"MAP {item['controls']['calibrationProgress']:.0%}" if mode == "duet_mapping" else f"G{item['gesture']}")
+                detail = (f"MAP {item['controls']['calibrationProgress']:.0%}" if mode in ("duet_mapping", "duet_hybrid") else f"G{item['gesture']}")
                 cv2.putText(frame, f"{role}  {detail}  #{item['ownerId']}", (x, height-20), cv2.FONT_HERSHEY_SIMPLEX, .5, (100, 230, 190), 1)
     elif results is not None and results.multi_hand_landmarks:
         hand_landmarks = results.multi_hand_landmarks[0]
@@ -186,15 +231,35 @@ def process_browser_frame(frame, render_preview=True):
                 timestamp=timestamp,
             )
         else:
+            if mode in ("mapping", "hybrid"):
+                if not hybrid_owner_visible:
+                    expire_solo_hybrid(timestamp)
+                handedness = (results.multi_handedness[0].classification[0].label
+                              if results.multi_handedness else '')
+                confidence = (getattr(results.multi_handedness[0].classification[0], 'score', 1.0)
+                              if results.multi_handedness else 0.0)
+                if solo_identity.update(handedness, timestamp, confidence):
+                    hybrid_recognizer.reset()
+                    with core.pipeline_lock:
+                        core.pipeline.reset_calibration()
+                hybrid_owner = solo_identity.label
+                hybrid_owner_visible = True
+                hybrid_last_seen = timestamp
             with core.pipeline_lock:
+                if core.pipeline.set_frame_size(frame_size) and mode == "hybrid":
+                    hybrid_recognizer.reset()
+                was_calibrated = core.pipeline.calibrated
                 controls = core.pipeline.update(
                     hand_landmarks.landmark,
                     timestamp=timestamp,
+                    frame_size=frame_size,
                 )
                 calibrated = core.pipeline.calibrated
                 calibration_progress = core.pipeline.calibration_progress
                 gesture_velocities = core.pipeline.gesture_velocities
-            gesture_result = gesture_recognizer.update(None, timestamp=timestamp)
+            gesture_result = (hybrid_recognizer.update(hand_landmarks.landmark, timestamp,
+                                                       enabled=was_calibrated)
+                              if mode == "hybrid" else gesture_recognizer.update(None, timestamp=timestamp))
         core.set_puppet_state(
             True,
             controls,
@@ -203,10 +268,10 @@ def process_browser_frame(frame, render_preview=True):
             sample_time=timestamp,
             gesture_velocities=gesture_velocities,
         )
-        publish_gesture_state(
-            gesture_result,
-            movement_x if mode == "gesture" else 0.0,
-        )
+        if mode == "hybrid":
+            publish_hybrid_state(gesture_result)
+        else:
+            publish_gesture_state(gesture_result, movement_x if mode == "gesture" else 0.0)
         if render_preview:
             core.mp_draw.draw_landmarks(frame, hand_landmarks, core.mp_hands.HAND_CONNECTIONS)
     else:
@@ -227,12 +292,17 @@ def process_browser_frame(frame, render_preview=True):
 
 
 def publish_no_hand(timestamp=None):
+    global hybrid_owner_visible
     timestamp = time.monotonic() if timestamp is None else timestamp
     mode = get_control_mode()
     if mode == "duet":
         publish_duet_state([], timestamp)
-    elif mode == "duet_mapping":
+    elif mode in ("duet_mapping", "duet_hybrid"):
         publish_duet_mapping_state([], timestamp)
+    if mode in ("mapping", "hybrid"):
+        hybrid_owner_visible = False
+        solo_identity.interrupt()
+        expire_solo_hybrid(timestamp)
     if mode == "gesture":
         movement_x = gesture_movement.update(None, timestamp=timestamp)
         controls = core.CONTROL_DEFAULTS.copy()
@@ -256,14 +326,16 @@ def publish_no_hand(timestamp=None):
         sample_time=timestamp,
         gesture_velocities=gesture_velocities,
     )
-    publish_gesture_state(
-        gesture_recognizer.update(None, timestamp=timestamp),
-        movement_x,
-    )
+    if mode == "hybrid":
+        publish_hybrid_state(hybrid_recognizer.update(None, timestamp))
+    elif mode != "duet_hybrid":
+        publish_gesture_state(gesture_recognizer.update(None, timestamp=timestamp), movement_x)
 
 
 def check_browser_timeout(now):
     global browser_stream_active
+    if performance is not None and performance_paused and performance['mode'] == 'hybrid':
+        return
     with browser_lock:
         silent = (last_browser_frame_time is not None
                   and now - last_browser_frame_time > browser_timeout_seconds)
@@ -278,8 +350,10 @@ def check_browser_timeout(now):
         # Continue aging ownership after the camera stops sending frames. The
         # 0.8 s browser timeout precedes the 1 s hand ownership release.
         publish_duet_state([], now)
-    elif silent and get_control_mode() == "duet_mapping":
+    elif silent and get_control_mode() in ("duet_mapping", "duet_hybrid"):
         publish_duet_mapping_state([], now)
+    elif silent and get_control_mode() in ("mapping", "hybrid"):
+        publish_no_hand(now)
 
 
 def browser_watchdog():
@@ -330,7 +404,7 @@ def read_duet_mapping_state():
 
 @app.post("/duet_mapping/calibrate")
 def calibrate_duet_mapping():
-    payload = request.get_json(silent=True) or {}
+    payload = json_object(allow_empty=True)
     side = payload.get('side', 'both')
     if side not in ('left', 'right', 'both'):
         return {'error':'side must be left, right or both'}, 400
@@ -370,6 +444,19 @@ def receive_frame():
         if performance is None and request.headers.get('X-Performance-Session'):
             return {'error': '本次演出已結束。'}, 409
         compact = performance is not None and request.headers.get('Accept') == 'application/json'
+        if performance is not None:
+            revision = request.headers.get('X-Calibration-Revision', '0')
+            if revision != str(performance['calibrationRevision']):
+                # Old captures must not enter the new calibration window, even
+                # when network scheduling delivers them after the reset request.
+                if compact:
+                    return jsonify({**performance_snapshot(), 'landmarks': [],
+                                    'processingMs': 0, 'discardedFrame': True})
+                return Response(status=204)
+        if performance is not None and performance_paused and performance['mode'] == 'hybrid':
+            if compact:
+                return jsonify({**performance_snapshot(), 'landmarks': [], 'processingMs': 0})
+            return Response(status=204)
         started = time.monotonic()
         landmarks = process_browser_frame(frame, render_preview=not compact)
         if compact:
@@ -422,6 +509,7 @@ def health():
 
 @app.post("/calibrate")
 def calibrate():
+    json_object(allow_empty=True)
     with inference_lock:
         if performance is not None:
             return {'error': '請使用整合舞台的校正按鈕。'}, 409
@@ -437,8 +525,11 @@ def calibrate():
 @app.post("/control_mode")
 def set_control_mode():
     global control_mode
-    payload = request.get_json(silent=True) or {}
-    mode = str(payload.get("mode", "")).strip().lower()
+    payload = json_object()
+    mode = payload.get("mode")
+    if not isinstance(mode, str):
+        return {"error": "mode must be a string"}, 400
+    mode = mode.strip().lower()
     if mode not in {"gesture", "mapping", "duet", "duet_mapping"}:
         return {"error": "mode must be gesture, mapping, duet or duet_mapping"}, 400
 
@@ -450,9 +541,11 @@ def set_control_mode():
                 return {"status": "ok", "mode": mode}
             control_mode = mode
         gesture_recognizer.reset()
+        reset_solo_hybrid()
         gesture_movement.reset()
         duet_router.reset()
         publish_duet_state([], time.monotonic())
+        duet_mapping_router.set_hybrid(False)
         duet_mapping_router.reset()
         publish_duet_mapping_state([], time.monotonic())
         publish_gesture_state()

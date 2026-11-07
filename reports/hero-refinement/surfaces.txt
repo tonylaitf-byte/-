@@ -1,0 +1,11 @@
+Sword_ColdSteel -> Assets/Environment/HeroRefinement/Hero_Sword_ColdSteel.mat
+Jug_Lacquered_Red -> Assets/Environment/HeroRefinement/Hero_Jug_Lacquered_Red.mat
+Royal_Blue -> Assets/Environment/HeroRefinement/Hero_Royal_Blue.mat
+White_Hair -> Assets/Environment/HeroRefinement/Hero_White_Hair.mat
+Royal_Gold -> Assets/Environment/HeroRefinement/Hero_Royal_Gold.mat
+Skin -> Assets/Environment/HeroRefinement/Hero_Skin.mat
+Crown_Gold -> Assets/Environment/HeroRefinement/Hero_Crown_Gold.mat
+Red -> Assets/Environment/HeroRefinement/Hero_Red.mat
+古金 -> Assets/Environment/HeroRefinement/Hero_AntiqueGold.mat
+Base Color -> Assets/Environment/HeroRefinement/Hero_Base_Color.mat
+base_shadow -> Assets/Environment/HeroRefinement/Hero_base_shadow.mat
